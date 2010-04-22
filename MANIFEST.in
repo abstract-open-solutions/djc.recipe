@@ -1,0 +1,2 @@
+include *.txt
+recursive-include djc *.txt *.py *.in
