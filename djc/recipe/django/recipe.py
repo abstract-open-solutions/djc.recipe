@@ -24,6 +24,29 @@ def dotted_import(dotted_name):
     return mod
 
 
+class _MemoizedProperty(object):
+    """A getter that caches the response
+    """
+
+    def __init__(self, orig_callable):
+        self._orig_callable = orig_callable
+
+    def __get__(self, instance, owner):
+        annotation = "_mp_%s" % self._orig_callable.__name__
+        if not hasattr(owner, annotation):
+            setattr(owner, annotation, self._orig_callable(owner))
+        return getattr(owner, annotation)
+
+
+def memoized_property(method):
+    return _MemoizedProperty(method)
+
+
+def normalize_keys(mapping):
+    for k, v in mapping.items():
+        yield (k.replace('-', '_'), v)
+
+
 class Recipe(object):
     """A Django buildout recipe
     """
@@ -34,36 +57,51 @@ class Recipe(object):
         self.options['location'] = os.path.join(
             self.buildout['buildout']['parts-directory'], self.name
         )
-        self.options.setdefault('media_directory', 'static')
-        if not 'project' in self.options:
-            raise zc.buildout.UserError(
-                "A 'project' egg must be specified in %s "
-                "(es 'project = my.django.project')" % self.name
+        self.options.setdefault('media-directory', 'static')
+        if not ('urlconf' in self.options and 'templates' in self.options):
+            if not 'project' in self.options:
+                raise zc.buildout.UserError(
+                    "A 'project' egg must be specified in %s "
+                    "(es 'project = my.django.project') "
+                    "if 'urlconf' and 'templates' are not." % self.name
+                )
+            try:
+                project = dotted_import(self.options['project'])
+            except ImportError:
+                raise zc.buildout.UserError(
+                    "The 'project' egg specified (%s) "
+                    "could not be imported" % self.options['project']
+                )
+            self.options.setdefault(
+                'urlconf',
+                '%s.urls' % self.options['project']
             )
-        try:
-            project = dotted_import(self.options['project'])
-        except ImportError:
-            raise zc.buildout.UserError(
-                "The 'project' egg specified (%s) "
-                "could not be imported" % self.options['project']
+            self.options.setdefault(
+                'templates',
+                os.path.join(os.path.dirname(project.__file__), 'templates')
             )
-        self.options.setdefault('urlconf', '%s.urls' % self.options['project'])
-        self.options.setdefault(
-            'templates',
-            os.path.join(os.path.dirname(project.__file__), 'templates')
-        )
         # functions that are used in templates
         def t_absolute_url(url):
             return os.path.join(
                 self.buildout['buildout']['directory'], url
             )
+
+        def t_listify(data):
+            lines = []
+            for raw_line in data.splitlines():
+                line = raw_line.strip()
+                if len(line) > 0:
+                    lines.append(line)
+            return lines
         
         # here go functions you'd like to have available in templates
         self._namespace_additions = {
-            'absolute_url': t_absolute_url
+            'absolute_url': t_absolute_url,
+            'listify': t_listify
         }
 
-    def _get_extra_paths(self):
+    @memoized_property
+    def extra_paths(self):
         extra_paths = [
             self.options['location'],
             self.buildout['buildout']['directory']
@@ -92,13 +130,8 @@ class Recipe(object):
         extra_paths.extend(pythonpath)
         return extra_paths
 
-    @property
-    def extra_paths(self):
-        if not hasattr(self, '_extra_paths'):
-            self._extra_paths = self._get_extra_paths()
-        return self._extra_paths
-
-    def _get_secret(self):
+    @memoized_property
+    def secret(self):
         secret_file = os.path.join(
             self.buildout['buildout']['directory'],
             '.secret.cfg'
@@ -118,16 +151,11 @@ class Recipe(object):
                 "Generated secret: %s (and written to %s)" % (data, secret_file)
             )
         return data
-    
-    @property
-    def secret(self):
-        if not hasattr(self, '_secret'):
-            self._secret = self._get_secret()
-        return self._secret
 
-    def _get_settings_py(self):
-        if 'settings_template' in self.options:
-            template_fname = self.options['settings_template']
+    @memoized_property
+    def settings_py(self):
+        if 'settings-template' in self.options:
+            template_fname = self.options['settings-template']
         else:
             template_fname = os.path.join(
                 os.path.dirname(__file__),
@@ -140,28 +168,17 @@ class Recipe(object):
         template_definition = stream.read().decode('utf-8')
         stream.close()
         self._logger.info("Generating settings")
-        namespace = self.options.copy()
+        namespace = dict(normalize_keys(self.options))
         namespace.update(self._namespace_additions)
         namespace.update({ 'name': self.name, 'secret': self.secret })
         template = Template(template_definition, namespace=namespace)
         return unicode(template)
 
-    @property
-    def settings_py(self):
-        if not hasattr(self, '_settings_py'):
-            self._settings_py = self._get_settings_py()
-        return self._settings_py
-
-    def _get_working_set(self):
+    @memoized_property
+    def working_set(self):
         self._logger.debug("Getting working set for djc.recipe.django")
         egg = zc.recipe.egg.Egg(self.buildout, self.options['recipe'], self.options)
         return egg.working_set(['djc.recipe.django'])
-
-    @property
-    def working_set(self):
-        if not hasattr(self, '_working_set'):
-            self._working_set = self._get_working_set()
-        return self._working_set
 
     def create_script(self):
         requirements, ws = self.working_set
@@ -181,21 +198,21 @@ class Recipe(object):
     def create_static(self):
         media_directory = os.path.join(
             self.buildout['buildout']['directory'],
-            self.options['media_directory']
+            self.options['media-directory']
         )
         if os.path.exists(media_directory):
             self._logger.info(
                 "Media directory %s exists, skipping" % media_directory
             )
             return media_directory
-        if 'media_origin' in self.options:
+        if 'media-origin' in self.options:
             self._logger.info(
                 "Copying media from '%s' to '%s'" % (
-                    self.options['media_origin'],
+                    self.options['media-origin'],
                 )
             )
             try:
-                mod, directory = self.options['media_origin'].split(':')
+                mod, directory = self.options['media-origin'].split(':')
             except ValueError:
                 raise zc.buildout.UserError(
                     "Error in '%s': media_origin must be in the form "
@@ -207,7 +224,7 @@ class Recipe(object):
                 raise zc.buildout.UserError(
                     "Error in '%s': media_origin is '%s' "
                     "but we cannot find module '%s'" % (
-                        self.name, self.options['media_origin'], mod
+                        self.name, self.options['media-origin'], mod
                     )
                 )
             orig_directory = os.path.join(
@@ -218,7 +235,7 @@ class Recipe(object):
                 raise zc.buildout.UserError(
                     "Error in '%s': media_origin is '%s' "
                     "but '%s' does not seem to be a directory" % (
-                        self.name, self.options['media_origin'], directory
+                        self.name, self.options['media-origin'], directory
                     )
                 )
             shutil.copytree(orig_directory, media_directory)

@@ -1,17 +1,18 @@
 .. contents::
 
-.. Note to recipe author!
-   ---------------------
-   Update the following URLs to point to your:
-   
-   - code repository
-   - bug tracker 
-   - questions/comments feedback mail 
-   (do not set a real mail, to avoid spams)
+This recipe allows you to setup a Django_ project through `zc.buildout`_.
 
-   Or remove it if not used.
+Usage
+=====
 
-- Code repository: http://svn.somewhere.com/...
-- Questions and comments to somemailing_list
-- Report bugs at http://bug.somewhere.com/..
+.. todo:: Write a short usage
 
+Links
+=====
+
+- Code repository: http://github.com/shywolf9982/djc.recipe.django
+- Questions and comments to simone DOT deponti AT abstract.it
+- Report bugs at http://github.com/shywolf9982/djc.recipe.django/issues
+
+.. _Django: http://www.djangoproject.com/
+.. _`zc.buildout`: http://www.buildout.org/
