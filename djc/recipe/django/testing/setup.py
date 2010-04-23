@@ -7,6 +7,5 @@ setup(
     url="http://example.com/acme/dummydjangoprj",
     author="John Smith",
     author_email="j.smith@example.com",
-    packages=['dummydjangoprj'],
-    zip_safe=False
+    packages=['dummydjangoprj']
 )

@@ -69,19 +69,29 @@ That cleared, we create the most simple buildout conceivable using this recipe :
     >>> write('buildout.cfg',
     ... """
     ... [buildout]
-    ... parts = djangotest
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
-    ... [djangotest]
+    ... [django]
     ... recipe = djc.recipe.django
     ... project = dummydjangoprj
     ... """)
 
 And run it ::
 
-    >>> print 'start', system(buildout) 
-    start...
-    Installing djangotest.
+    >>> print "start\n", system(buildout) 
+    start
+    ...
+    Installing django.
+    Getting distribution for 'dummydjangoprj'.
+    ...
+    django: Generating settings
+    django: Generating files in django
+    django: Making empty media directory ...
+    django: Creating script at ...
+    Generated script ...
     <BLANKLINE>
 
 

@@ -4,7 +4,7 @@ Doctest runner for 'djc.recipe.django'.
 """
 __docformat__ = 'restructuredtext'
 
-import unittest, os
+import unittest, os, tempfile, shutil
 import zc.buildout.tests
 import zc.buildout.testing
 
@@ -18,12 +18,22 @@ def setUp(test):
     normpath, join, dirname = os.path.normpath, os.path.join, os.path.dirname
     zc.buildout.testing.buildoutSetUp(test)
     zc.buildout.testing.install_develop('djc.recipe.django', test)
-    packages = join(test.globs['sample_buildout'], 'packages')
-    zc.buildout.testing.mkdir(packages)
-    zc.buildout.testing.sdist(
-        normpath(join(dirname(__file__), '..', 'testing')),
-        packages
-    )
+    try:
+        tmpdir = tempfile.mkdtemp(prefix='djc.recipe.django.tests')
+        shutil.copytree(
+            normpath(join(dirname(__file__), '..', 'testing')),
+            join(tmpdir, 'dummydjangoprj')
+        )
+        packages = join(test.globs['sample_buildout'], 'packages')
+        zc.buildout.testing.mkdir(packages)
+        zc.buildout.testing.sdist(
+            join(tmpdir, 'dummydjangoprj'),
+            packages
+        )
+    except:
+        raise
+    finally:
+        shutil.rmtree(tmpdir)
 
 def test_suite():
     suite = unittest.TestSuite((

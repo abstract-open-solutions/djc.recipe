@@ -9,18 +9,34 @@ mere templating matter.
 The settings file is saved in ``parts/name/settings.py``.
 """
 
-import os, logging, random, shutil
+import os, logging, random, shutil, imp, sys, collections
 import zc.recipe.egg
 from tempita import Template
 
 
-def dotted_import(dotted_name):
+def dotted_import(dotted_name, ws, extra_paths = []):
     """Tries to load a dotted name
     """
-    mod = __import__(dotted_name)
-    components = dotted_name.split('.')
-    for comp in components[1:]:
-        mod = getattr(mod, comp)
+    paths = [ dist.location for dist in ws ]
+    paths.extend(extra_paths)
+    components = collections.deque(dotted_name.split('.'))
+    paths = sys.path + paths
+    load = True
+    mod = None
+    while len(components) > 0:
+        component = components.popleft()
+        if load:
+            try:
+                p, f, d = imp.find_module(component, paths)
+            except ValueError:
+                raise ImportError(dotted_name)
+            mod = imp.load_module(component, p, f, d)
+            try:
+                paths = mod.__path__
+            except AttributeError:
+                load = False
+        else:
+            mod = getattr(mod, component)
     return mod
 
 
@@ -32,10 +48,12 @@ class _MemoizedProperty(object):
         self._orig_callable = orig_callable
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return None
         annotation = "_mp_%s" % self._orig_callable.__name__
-        if not hasattr(owner, annotation):
-            setattr(owner, annotation, self._orig_callable(owner))
-        return getattr(owner, annotation)
+        if not hasattr(instance, annotation):
+            setattr(instance, annotation, self._orig_callable(instance))
+        return getattr(instance, annotation)
 
 
 def memoized_property(method):
@@ -54,9 +72,13 @@ class Recipe(object):
     def __init__(self, buildout, name, options):
         self.buildout, self.name, self.options = buildout, name, options
         self._logger = logging.getLogger(name)
+        self.egg = zc.recipe.egg.Egg(
+            self.buildout, self.options['recipe'], self.options
+        )
         self.options['location'] = os.path.join(
             self.buildout['buildout']['parts-directory'], self.name
         )
+        self.options.setdefault('extra-paths', '')
         self.options.setdefault('media-directory', 'static')
         if not ('urlconf' in self.options and 'templates' in self.options):
             if not 'project' in self.options:
@@ -65,39 +87,16 @@ class Recipe(object):
                     "(es 'project = my.django.project') "
                     "if 'urlconf' and 'templates' are not." % self.name
                 )
-            try:
-                project = dotted_import(self.options['project'])
-            except ImportError:
-                raise zc.buildout.UserError(
-                    "The 'project' egg specified (%s) "
-                    "could not be imported" % self.options['project']
-                )
-            self.options.setdefault(
-                'urlconf',
-                '%s.urls' % self.options['project']
-            )
-            self.options.setdefault(
-                'templates',
-                os.path.join(os.path.dirname(project.__file__), 'templates')
-            )
         # functions that are used in templates
         def t_absolute_url(url):
             return os.path.join(
                 self.buildout['buildout']['directory'], url
             )
-
-        def t_listify(data):
-            lines = []
-            for raw_line in data.splitlines():
-                line = raw_line.strip()
-                if len(line) > 0:
-                    lines.append(line)
-            return lines
         
         # here go functions you'd like to have available in templates
         self._namespace_additions = {
             'absolute_url': t_absolute_url,
-            'listify': t_listify
+            'listify': lambda x: x.split()
         }
 
     @memoized_property
@@ -174,14 +173,11 @@ class Recipe(object):
         template = Template(template_definition, namespace=namespace)
         return unicode(template)
 
-    @memoized_property
-    def working_set(self):
-        self._logger.debug("Getting working set for djc.recipe.django")
-        egg = zc.recipe.egg.Egg(self.buildout, self.options['recipe'], self.options)
-        return egg.working_set(['djc.recipe.django'])
-
     def create_script(self):
-        requirements, ws = self.working_set
+        eggs = ['djc.recipe.django']
+        if 'project' in self.options:
+            eggs.append(self.options['project'])
+        requirements, ws = self.egg.working_set(eggs)
         self._logger.info("Creating script at %s" % self.options['executable'])
         return zc.buildout.easy_install.scripts(
             [(
@@ -195,6 +191,55 @@ class Recipe(object):
             arguments = "'%s.settings'" % self.name
         )
 
+    def install_project(self):
+        if 'project' in self.options:
+            try:
+                requirements, ws = self.egg.working_set(
+                    ['djc.recipe.django', self.options['project']]
+                )
+                project = dotted_import(self.options['project'], ws)
+            except ImportError:
+                self._logger.info(
+                    "Specified project '%s' not found, attempting install" % (
+                        self.options['project'],
+                    )
+                )
+                requirements, ws = self.working_set
+                buildout = self.buildout['buildout']
+                if 'versions' in buildout and buildout['versions'] in self.buildout:
+                    versions = self.buildout[buildout['versions']]
+                else:
+                    versions = None
+                zc.buildout.easy_install.install(
+                    [self.options['project']], buildout['eggs-directory'],
+                    links = buildout.get('find-links', '').split(),
+                    index = buildout.get('index'),
+                    path = [
+                        buildout['develop-eggs-directory'],
+                        buildout['eggs-directory']
+                    ],
+                    always_unzip=True,
+                    newest = self.buildout.newest,
+                    allow_hosts = self.buildout._allow_hosts,
+                    versions = versions,
+                    working_set = ws
+                )
+                requirements, ws = self.egg.working_set(
+                    ['djc.recipe.django', self.options['project']]
+                )
+                project = dotted_import(
+                    self.options['project'],
+                    ws
+                )
+            self.options.setdefault(
+                'urlconf',
+                '%s.urls' % self.options['project']
+            )
+            self.options.setdefault(
+                'templates',
+                os.path.join(os.path.dirname(project.__file__), 'templates')
+            )
+
     def create_static(self):
         media_directory = os.path.join(
             self.buildout['buildout']['directory'],
@@ -204,7 +249,7 @@ class Recipe(object):
             self._logger.info(
                 "Media directory %s exists, skipping" % media_directory
             )
-            return media_directory
+            return [ media_directory ]
         if 'media-origin' in self.options:
             self._logger.info(
                 "Copying media from '%s' to '%s'" % (
@@ -243,8 +288,8 @@ class Recipe(object):
             self._logger.info(
                 "Making empty media directory '%s'" % media_directory
             )
-            os.path.makedirs(media_directory)
-        return media_directory
+            os.makedirs(media_directory)
+        return [ media_directory ]
 
     def create_project(self):
         project_dir = self.options['location']
@@ -268,14 +313,16 @@ class Recipe(object):
             st = open(fullpath, 'wb')
             st.write(f['content'].encode('utf-8'))
             st.close()
-        return project_dir
+        return [ project_dir ]
 
     def install(self):
         """Installs the part"""
-        return tuple([
-            self.create_project(),
-            self.create_static(),
+        generated = []
+        self.install_project()
+        return tuple(
+            self.create_project() +
+            self.create_static() +
             self.create_script()
-        ])
+        )
 
     update = install
