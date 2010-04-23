@@ -57,19 +57,14 @@ Example usage
 =============
 
 As first thing, we need to have a Django project egg around. We have made a
-very simple one just for testing: one that is absolutely useless for anything
-besides illustrating the directory structure.
+very simple one just for testing and we have created a source distribution for
+it located in ``packages``.
 
-We are going now to create a source distribution for it and have the buildout
-see it: this is not the only way, as during developement you might want to
-consider the use of something like `mr.developer`_.
+This is of course not the only way you can distribute and obtain the project
+egg: for example, during developement, it is recommended to use `mr.developer`_
+for that.
 
-Let's proceed with creating our project egg ::
-
-    >>> mkdir('packages')
-    >>> sdist('testing', 'packages')
-
-And then create the most simple buildout conceivable using this recipe ::
+That cleared, we create the most simple buildout conceivable using this recipe ::
 
     >>> write('buildout.cfg',
     ... """

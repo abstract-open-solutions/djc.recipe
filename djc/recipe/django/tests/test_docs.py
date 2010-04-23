@@ -4,7 +4,7 @@ Doctest runner for 'djc.recipe.django'.
 """
 __docformat__ = 'restructuredtext'
 
-import unittest
+import unittest, os
 import zc.buildout.tests
 import zc.buildout.testing
 
@@ -15,13 +15,15 @@ optionflags =  (doctest.ELLIPSIS |
                 doctest.REPORT_ONLY_FIRST_FAILURE)
 
 def setUp(test):
+    normpath, join, dirname = os.path.normpath, os.path.join, os.path.dirname
     zc.buildout.testing.buildoutSetUp(test)
-
-    # Install the recipe in develop mode
     zc.buildout.testing.install_develop('djc.recipe.django', test)
-
-    # Install any other recipes that should be available in the tests
-    #zc.buildout.testing.install('collective.recipe.foobar', test)
+    packages = join(test.globs['sample_buildout'], 'packages')
+    zc.buildout.testing.mkdir(packages)
+    zc.buildout.testing.sdist(
+        normpath(join(dirname(__file__), '..', 'testing')),
+        packages
+    )
 
 def test_suite():
     suite = unittest.TestSuite((
