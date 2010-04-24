@@ -9,9 +9,13 @@ mere templating matter.
 The settings file is saved in ``parts/name/settings.py``.
 """
 
-import os, logging, random, shutil, imp, sys, collections
+import os, re, logging, random, shutil, imp, sys, collections
 import zc.recipe.egg
 from tempita import Template
+
+
+_egg_name = 'djc.recipe.django'
+_settings_name = 'settings.py'
 
 
 def dotted_import(dotted_name, ws, extra_paths = []):
@@ -23,20 +27,26 @@ def dotted_import(dotted_name, ws, extra_paths = []):
     paths = sys.path + paths
     load = True
     mod = None
-    while len(components) > 0:
-        component = components.popleft()
-        if load:
-            try:
-                p, f, d = imp.find_module(component, paths)
-            except ValueError:
-                raise ImportError(dotted_name)
-            mod = imp.load_module(component, p, f, d)
-            try:
-                paths = mod.__path__
-            except AttributeError:
-                load = False
-        else:
-            mod = getattr(mod, component)
+    try:
+        imp.acquire_lock()
+        while len(components) > 0:
+            component = components.popleft()
+            if load:
+                try:
+                    p, f, d = imp.find_module(component, paths)
+                except ValueError:
+                    raise ImportError(dotted_name)
+                mod = imp.load_module(component, p, f, d)
+                try:
+                    paths = mod.__path__
+                except AttributeError:
+                    load = False
+            else:
+                mod = getattr(mod, component)
+    except Exception:
+        imp.release_lock()
+        raise
+    imp.release_lock()
     return mod
 
 
@@ -75,11 +85,63 @@ class Recipe(object):
         self.egg = zc.recipe.egg.Egg(
             self.buildout, self.options['recipe'], self.options
         )
+
         self.options['location'] = os.path.join(
             self.buildout['buildout']['parts-directory'], self.name
         )
         self.options.setdefault('extra-paths', '')
+        
         self.options.setdefault('media-directory', 'static')
+        self.options.setdefault('media-url', 'media')
+        self.options.setdefault('admin-media', 'admin_media')
+        for option in ('media-url', 'admin-media'):
+            self.options[option] = self.options[option].strip('/')
+        
+        self.options.setdefault('database-engine', 'sqlite3')
+        self.options.setdefault('database-name', 'storage.db')
+        self.options.setdefault('database-user', '')
+        self.options.setdefault('database-password', '')
+        self.options.setdefault('database-host', '')
+        self.options.setdefault('database-port', '')
+        
+        self.options.setdefault('timezone', 'America/Chicago')
+        self.options.setdefault('language-code', 'en-us')
+
+        self.options.setdefault('admins', "John Smith <root@localhost>")
+        self.options.setdefault('managers', 'ADMINS')
+
+        self.options.setdefault('base-settings', '')
+
+        _middleware_default = '''
+            django.middleware.common.CommonMiddleware
+            django.contrib.sessions.middleware.SessionMiddleware
+            django.contrib.auth.middleware.AuthenticationMiddleware
+            django.middleware.doc.XViewMiddleware
+        '''
+
+        _apps_default = '''
+            django.contrib.auth
+            django.contrib.contenttypes
+            django.contrib.sessions
+            django.contrib.admin
+        '''
+
+        _template_loaders_default = '''
+            django.template.loaders.filesystem.load_template_source
+            django.template.loaders.app_directories.load_template_source
+        '''
+
+        if self.options['base-settings']:
+            _middleware_default = ''
+            _apps_default = ''
+            _template_loaders_default = ''
+
+        self.options.setdefault('middleware', _middleware_default)
+        self.options.setdefault('apps', _apps_default)
+        self.options.setdefault('template-loaders', _template_loaders_default)
+
+        self.options.setdefault('debug', 'false')
+
         if not ('urlconf' in self.options and 'templates' in self.options):
             if not 'project' in self.options:
                 raise zc.buildout.UserError(
@@ -88,24 +150,46 @@ class Recipe(object):
                     "if 'urlconf' and 'templates' are not." % self.name
                 )
         # functions that are used in templates
-        def t_absolute_url(url):
+        def t_absolute_path(url):
             return os.path.join(
                 self.buildout['buildout']['directory'], url
             )
+
+        def t_listify(data):
+            lines = []
+            for raw_line in data.splitlines():
+                line = raw_line.strip()
+                if line != '':
+                    lines.append(line)
+            return lines
+
+        def t_rfc822tuplize(data):
+            m = re.match('(.+)\s+<(.+)>', data)
+            if m is None:
+                return (data,)
+            else:
+                return (m.group(1), m.group(2))
+
+        def t_boolify(data):
+            if data.lower() in ['true', 'on', '1']:
+                return True
+            return False
+
+        def t_join(data, infix, prefix="", suffix=""):
+            return prefix+infix.join(data)+suffix
         
         # here go functions you'd like to have available in templates
-        self._namespace_additions = {
-            'absolute_url': t_absolute_url,
-            'listify': lambda x: x.split()
+        self._template_namespace = {
+            'absolute_path': t_absolute_path,
+            'listify': t_listify,
+            'rfc822tuplize': t_rfc822tuplize,
+            'boolify': t_boolify,
+            'join': t_join
         }
 
     @memoized_property
     def extra_paths(self):
-        extra_paths = [
-            self.options['location'],
-            self.buildout['buildout']['directory']
-        ]
-
+        extra_paths = []
         # Add libraries found by a site .pth files to our extra-paths.
         if 'pth-files' in self.options:
             import site
@@ -167,14 +251,13 @@ class Recipe(object):
         template_definition = stream.read().decode('utf-8')
         stream.close()
         self._logger.info("Generating settings")
-        namespace = dict(normalize_keys(self.options))
-        namespace.update(self._namespace_additions)
-        namespace.update({ 'name': self.name, 'secret': self.secret })
-        template = Template(template_definition, namespace=namespace)
-        return unicode(template)
+        variables = dict(normalize_keys(self.options))
+        variables.update({ 'name': self.name, 'secret': self.secret })
+        template = Template(template_definition, namespace=self._template_namespace)
+        return template.substitute(variables)
 
     def create_script(self):
-        eggs = ['djc.recipe.django']
+        eggs = [_egg_name]
         if 'project' in self.options:
             eggs.append(self.options['project'])
         requirements, ws = self.egg.working_set(eggs)
@@ -188,14 +271,17 @@ class Recipe(object):
             ws, self.options['executable'],
             self.options['bin-directory'],
             extra_paths = self.extra_paths,
-            arguments = "'%s.settings'" % self.name
+            arguments = "'%s'" % os.path.join(
+                self.options['location'],
+                _settings_name
+            )
         )
 
     def install_project(self):
         if 'project' in self.options:
             try:
                 requirements, ws = self.egg.working_set(
-                    ['djc.recipe.django', self.options['project']]
+                    [_egg_name, self.options['project']]
                 )
                 project = dotted_import(self.options['project'], ws)
             except ImportError:
@@ -225,7 +311,7 @@ class Recipe(object):
                     working_set = ws
                 )
                 requirements, ws = self.egg.working_set(
-                    ['djc.recipe.django', self.options['project']]
+                    [_egg_name, self.options['project']]
                 )
                 project = dotted_import(
                     self.options['project'],
@@ -264,7 +350,11 @@ class Recipe(object):
                     "'custom.module:directory'" % self.name
                 )
             try:
-                mod = dotted_import(mod)
+                eggs = [_egg_name]
+                if 'project' in self.options:
+                    eggs.append(self.options['project'])
+                requirements, ws = self.egg.working_set(eggs)
+                mod = dotted_import(mod, ws)
             except ImportError:
                 raise zc.buildout.UserError(
                     "Error in '%s': media_origin is '%s' "
@@ -295,24 +385,19 @@ class Recipe(object):
         project_dir = self.options['location']
         if not os.path.exists(project_dir):
             self._logger.debug("Creating %s" % project_dir)
-            os.mkdir(project_dir)
+            os.makedirs(project_dir)
         if not os.path.isdir(project_dir):
             raise zc.buildout.UserError(
                 "Can't install %s: %s is not a directory!" % (
                     self.name, project_dir
                 )
             )
-        files = [
-            { 'name': 'init.py', 'content': u'#\n' },
-            { 'name': 'settings.py', 'content': self.settings_py }
-        ]
-        self._logger.info("Generating files in %s" % self.name)
-        for f in files:
-            fullpath = os.path.join(project_dir, f['name'])
-            self._logger.debug("(Over)writing %s" % fullpath)
-            st = open(fullpath, 'wb')
-            st.write(f['content'].encode('utf-8'))
-            st.close()
+        self._logger.info("Generating settings in %s" % project_dir)
+        fullpath = os.path.join(project_dir, _settings_name)
+        self._logger.debug("(Over)writing %s" % fullpath)
+        st = open(fullpath, 'wb')
+        st.write(self.settings_py.encode('utf-8'))
+        st.close()
         return [ project_dir ]
 
     def install(self):

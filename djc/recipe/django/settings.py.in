@@ -1,61 +1,75 @@
-import os
-
+{{if base_settings}}
+from {{base_settings}} import *
+{{endif}}
 ADMINS = (
-    # ('Your Name', 'your_email@domain.com'),
+{{for admin_glob in listify(admins)}}
+    {{py:admin = rfc822tuplize(admin_glob)}}
+    {{if len(admin) > 0}}
+    ('{{admin[0]}}', '{{admin[1]}}')
+    {{endif}}
+{{endfor}}
 )
 
+{{if managers == 'ADMINS'}}
 MANAGERS = ADMINS
+{{else}}
+MANAGERS = (
+    {{for manager_glob in listify(managers)}}
+        {{py:manager = rfc822tuplize(manager_glob)}}
+        {{if len(manager) > 0}}
+    ('{{manager[0]}}', '{{manager[1]}}')
+        {{endif}}
+    {{endfor}}
+)
+{{endif}}
 
-DATABASE_ENGINE = 'sqlite3'    # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = '{{name}}.db'
-DATABASE_USER = ''             # Not used with sqlite3.
-DATABASE_PASSWORD = ''         # Not used with sqlite3.
-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
 
-TIME_ZONE = 'America/Chicago'
+DATABASE_ENGINE = '{{database_engine}}'
+DATABASE_NAME = '{{database_name}}'
+DATABASE_USER = '{{database_user}}'
+DATABASE_PASSWORD = '{{database_password}}'
+DATABASE_HOST = '{{database_host}}'
+DATABASE_PORT = '{{database_port}}'
 
-LANGUAGE_CODE = 'en-us'
+TIME_ZONE = '{{timezone}}'
 
-# Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
+LANGUAGE_CODE = '{{language_code}}'
+
 MEDIA_ROOT = '{{absolute_path(media_directory)}}'
 
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '/media/'
+MEDIA_URL = '/{{media_url}}/'
 
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/admin_media/'
+ADMIN_MEDIA_PREFIX = '/{{admin_media}}/'
 
-# Don't share this with anybody.
 SECRET_KEY = '{{secret}}'
 
+{{if middleware}}
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.doc.XViewMiddleware',
+    {{join(listify(middleware),"',\n    '","'","'")}}
 )
+{{endif}}
 
 ROOT_URLCONF = '{{urlconf}}'
 
-
+{{if apps}}
 INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.admin',
+    {{join(listify(apps),"',\n    '","'","'")}}
 )
+{{endif}}
 
+{{if template_loaders}}
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
+    {{join(listify(template_loaders),"',\n    '","'","'")}}
 )
+{{endif}}
 
+{{if templates}}
 TEMPLATE_DIRS = (
-    '{{templates}}',
+    {{join(listify(templates),"',\n    '","'","'")}}
 )
+{{endif}}
+
+{{if boolify(debug)}}
+DEBUG=True
+TEMPLATE_DEBUG=DEBUG
+{{endif}}
