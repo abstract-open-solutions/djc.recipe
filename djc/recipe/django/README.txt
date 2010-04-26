@@ -32,6 +32,10 @@ settings-template
     file, if not provided, the default template will be used. See Templating_
     for more details.
 
+settings-template-extension
+    If specified, the given template is appended to the template specified by
+    ``settings template`` or to the default one.
+
 media-origin
     If specified, defines a directory from which to copy the static files that
     have to go in ``media-directory``: the files will be copied over only if
@@ -45,6 +49,11 @@ base-settings
     If specified, the defaults for ``apps``, ``middleware`` and
     ``template-loaders`` becomes an empty string (resulting into them not being
     written at all).
+
+wsgi
+    Defaults to ``false``. If set to ``true`` (or ``on`` or ``1``) creates a
+    script in ``parts/$partname`` named ``$partname.wsgi.py`` that can be used
+    as WSGI script in Apache or other WSGI enabled webserver.
 
 
 Advanced options
@@ -169,6 +178,51 @@ template-loaders
     
 debug
     If ``true``, activates debug mode. Defaults to ``false``
+
+site-id
+    The Django site id. Defaults to unset.
+
+template-context-processors
+    The Django template context processors. Defaults to unset.
+
+authentication-backends
+    The Django authentication backends. Defaults to unset
+
+languages
+    A list of supported languages in the form ``code Fullname``, for example
+    ``en-us English (US)``. Defaults to unset.
+
+smtp-host
+    The SMTP host to use when sending mail. Defaults to ``localhost``.
+
+smtp-port
+    The SMTP server port. Defaults to 25.
+
+smtp-user
+    The username to use to connect to the SMTP server. Defaults to unset.
+    
+smtp-password
+    The password to use to connect to the SMTP server. This is not valid if
+    ``smtp-user`` is not set aswell. Defaults to unset.
+    
+smtp-tls
+    Whether TLS should be used when connecting to the SMTP server (boolean
+    option). Defaults to ``false``.
+
+site-domain
+    The site domain. Defaults to unset.
+    
+site-name
+    The site title. Defaults to unset.
+
+cache-backend
+    The cache backend. Defaults to ``locmem:///``.
+
+cache-timeout
+    The cache timeout in seconds. Defaults to ``60*5``.
+    
+cache-prefix
+    The cache prefix (prefixed at all cache IDs). Defaults to ``Z``.
 
 
 Example usage

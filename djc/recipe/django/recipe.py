@@ -17,6 +17,19 @@ from tempita import Template
 _egg_name = 'djc.recipe.django'
 _settings_name = 'settings.py'
 
+_wsgi_script_template = '''
+
+%(relative_paths_setup)s
+import sys
+sys.path[0:0] = [
+  %(path)s,
+  ]
+%(initialization)s
+import %(module_name)s
+
+application = %(module_name)s.%(attrs)s(%(arguments)s)
+'''
+
 
 def dotted_import(dotted_name, ws, extra_paths = []):
     """Tries to load a dotted name
@@ -90,6 +103,10 @@ class Recipe(object):
             self.buildout['buildout']['parts-directory'], self.name
         )
         self.options.setdefault('extra-paths', '')
+
+        self.options.setdefault('site-id', '')
+        self.options.setdefault('site-domain', '')
+        self.options.setdefault('site-name', '')
         
         self.options.setdefault('media-directory', 'static')
         self.options.setdefault('media-url', 'media')
@@ -103,9 +120,20 @@ class Recipe(object):
         self.options.setdefault('database-password', '')
         self.options.setdefault('database-host', '')
         self.options.setdefault('database-port', '')
+
+        self.options.setdefault('smtp-host', 'localhost')
+        self.options.setdefault('smtp-port', '25')
+        self.options.setdefault('smtp-user', '')
+        self.options.setdefault('smtp-password', '')
+        self.options.setdefault('smtp-tls', 'false')
+
+        self.options.setdefault('cache-backend', 'locmem:///')
+        self.options.setdefault('cache-timeout', '60*5')
+        self.options.setdefault('cache-prefix', 'Z')
         
         self.options.setdefault('timezone', 'America/Chicago')
         self.options.setdefault('language-code', 'en-us')
+        self.options.setdefault('languages', '')
 
         self.options.setdefault('admins', "John Smith <root@localhost>")
         self.options.setdefault('managers', 'ADMINS')
@@ -139,6 +167,8 @@ class Recipe(object):
         self.options.setdefault('middleware', _middleware_default)
         self.options.setdefault('apps', _apps_default)
         self.options.setdefault('template-loaders', _template_loaders_default)
+        self.options.setdefault('template-context-processors', '')
+        self.options.setdefault('authentication-backends', '')
 
         self.options.setdefault('debug', 'false')
 
@@ -250,32 +280,63 @@ class Recipe(object):
         stream = open(template_fname, 'rb')
         template_definition = stream.read().decode('utf-8')
         stream.close()
+        if 'settings-template-extension' in self.options:
+            stream = open(
+                self.options['settings-template-extension'],
+                'rb'
+            )
+            template_definition += u"\n\n# Extension template %s\n\n"
+            template_definition += stream.read().decode('utf-8')
+            stream.close()
         self._logger.info("Generating settings")
         variables = dict(normalize_keys(self.options))
         variables.update({ 'name': self.name, 'secret': self.secret })
-        template = Template(template_definition, namespace=self._template_namespace)
+        template = Template(
+            template_definition,
+            namespace=self._template_namespace
+        )
         return template.substitute(variables)
 
-    def create_script(self):
+    def _create_script(self, name, path, module, attr):
         eggs = [_egg_name]
         if 'project' in self.options:
             eggs.append(self.options['project'])
         requirements, ws = self.egg.working_set(eggs)
-        self._logger.info("Creating script at %s" % self.options['executable'])
+        self._logger.info(
+            "Creating script at %s" % (os.path.join(path, name),)
+        )
         return zc.buildout.easy_install.scripts(
-            [(
-                self.options.get('control-script', self.name),
-                'djc.recipe.django.manage',
-                'main'
-            )],
+            [(name, module, attr)],
             ws, self.options['executable'],
-            self.options['bin-directory'],
+            path,
             extra_paths = self.extra_paths,
             arguments = "'%s'" % os.path.join(
                 self.options['location'],
                 _settings_name
             )
         )
+
+    def create_script(self):
+        return self._create_script(
+            self.options.get('control-script', self.name),
+            self.buildout['buildout']['bin-directory'],
+            'djc.recipe.django.manage',
+            'main'
+        )
+
+    def create_wsgi_script(self):
+        _script_template = zc.buildout.easy_install.script_template
+        zc.buildout.easy_install.script_template = \
+                zc.buildout.easy_install.script_header + \
+                    _wsgi_script_template
+        script = self._create_script(
+            '%s.wsgi.py' % self.name,
+            self.options['location'],
+            'djc.recipe.django.wsgi',
+            'main'
+        )
+        zc.buildout.easy_install.script_template = _script_template
+        return script
 
     def install_project(self):
         if 'project' in self.options:
@@ -401,13 +462,17 @@ class Recipe(object):
         return [ project_dir ]
 
     def install(self):
-        """Installs the part"""
-        generated = []
+        """Installs the part
+        """
+        
         self.install_project()
-        return tuple(
-            self.create_project() +
-            self.create_static() +
+        files = (
+            self.create_project() + 
+            self.create_static() + 
             self.create_script()
         )
+        if self._template_namespace['boolify'](self.options['wsgi']):
+            files += self.create_wsgi_script()
+        return tuple(files)
 
     update = install

@@ -23,6 +23,9 @@ MANAGERS = (
 )
 {{endif}}
 
+{{if site_id}}
+SITE_ID = {{site_id}}
+{{endif}}
 
 DATABASE_ENGINE = '{{database_engine}}'
 DATABASE_NAME = '{{database_name}}'
@@ -68,6 +71,48 @@ TEMPLATE_DIRS = (
     {{join(listify(templates),"',\n    '","'","'")}}
 )
 {{endif}}
+{{if template_context_processors}}
+TEMPLATE_CONTEXT_PROCESSORS = (
+    {{join(listify(template_context_processors),"',\n    '","'","'")}}
+)
+{{endif}}
+{{if authentication_backends}}
+AUTHENTICATION_BACKENDS = (
+    {{join(listify(authentication_backends),"',\n    '","'","'")}}
+)
+{{endif}}
+{{if languages}}
+gettext_noop = lambda s:s
+LANGUAGES = (
+    {{for language_tuple in listify(languages)}}
+    {{py:language = language_tuple.split(' ', 1)}}
+    {{if len(language) > 0}}
+    ('{{language[0]}}', gettext_noop('{{language[1]}}'))
+    {{endif}}
+    {{endfor}}
+)
+{{endif}}
+
+EMAIL_HOST = '{{smtp_host}}'
+EMAIL_PORT = {{smtp_port}}
+{{if smtp_user}}
+EMAIL_HOST_USER = '{{smtp_user}}'
+{{endif}}
+{{if smtp_password}}
+EMAIL_HOST_PASSWORD = '{{smtp_password}}'
+{{endif}}
+EMAIL_USE_TLS = {{boolify(smtp_tls)}}
+
+{{if site_domain}}
+SITE_DOMAIN = '{{site_domain}}'
+{{endif}}
+{{if site_name}}
+SITE_NAME = '{{site_name}}'
+{{endif}}
+
+CACHE_BACKEND = '{{cache_backend}}'
+CACHE_TIMEOUT = {{cache_timeout}}
+CACHE_PREFIX = '{{cache_prefix}}'
 
 {{if boolify(debug)}}
 DEBUG=True
