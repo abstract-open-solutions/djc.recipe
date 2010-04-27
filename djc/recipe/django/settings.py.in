@@ -5,7 +5,7 @@ ADMINS = (
 {{for admin_glob in listify(admins)}}
     {{py:admin = rfc822tuplize(admin_glob)}}
     {{if len(admin) > 0}}
-    ('{{admin[0]}}', '{{admin[1]}}')
+    ('{{admin[0]}}', '{{admin[1]}}'),
     {{endif}}
 {{endfor}}
 )
@@ -17,7 +17,7 @@ MANAGERS = (
     {{for manager_glob in listify(managers)}}
         {{py:manager = rfc822tuplize(manager_glob)}}
         {{if len(manager) > 0}}
-    ('{{manager[0]}}', '{{manager[1]}}')
+    ('{{manager[0]}}', '{{manager[1]}}'),
         {{endif}}
     {{endfor}}
 )
@@ -87,7 +87,7 @@ LANGUAGES = (
     {{for language_tuple in listify(languages)}}
     {{py:language = language_tuple.split(' ', 1)}}
     {{if len(language) > 0}}
-    ('{{language[0]}}', gettext_noop('{{language[1]}}'))
+    ('{{language[0]}}', gettext_noop('{{language[1]}}')),
     {{endif}}
     {{endfor}}
 )

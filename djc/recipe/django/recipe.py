@@ -172,6 +172,12 @@ class Recipe(object):
 
         self.options.setdefault('debug', 'false')
 
+        self.eggs = [ _egg_name ]
+        if 'eggs' in self.buildout['buildout']:
+            self.eggs.extend(self.buildout['buildout']['eggs'].split())
+        if 'eggs' in self.options:
+            self.eggs.extend(self.options['eggs'].split())
+
         if not ('urlconf' in self.options and 'templates' in self.options):
             if not 'project' in self.options:
                 raise zc.buildout.UserError(
@@ -298,10 +304,7 @@ class Recipe(object):
         return template.substitute(variables)
 
     def _create_script(self, name, path, module, attr):
-        eggs = [_egg_name]
-        if 'project' in self.options:
-            eggs.append(self.options['project'])
-        requirements, ws = self.egg.working_set(eggs)
+        requirements, ws = self.egg.working_set(self.eggs)
         self._logger.info(
             "Creating script at %s" % (os.path.join(path, name),)
         )
@@ -341,9 +344,7 @@ class Recipe(object):
     def install_project(self):
         if 'project' in self.options:
             try:
-                requirements, ws = self.egg.working_set(
-                    [_egg_name, self.options['project']]
-                )
+                requirements, ws = self.egg.working_set(self.eggs)
                 project = dotted_import(self.options['project'], ws)
             except ImportError:
                 self._logger.info(
@@ -371,9 +372,7 @@ class Recipe(object):
                     versions = versions,
                     working_set = ws
                 )
-                requirements, ws = self.egg.working_set(
-                    [_egg_name, self.options['project']]
-                )
+                requirements, ws = self.egg.working_set(self.eggs)
                 project = dotted_import(
                     self.options['project'],
                     ws
@@ -401,6 +400,7 @@ class Recipe(object):
             self._logger.info(
                 "Copying media from '%s' to '%s'" % (
                     self.options['media-origin'],
+                    media_directory
                 )
             )
             try:
@@ -411,10 +411,7 @@ class Recipe(object):
                     "'custom.module:directory'" % self.name
                 )
             try:
-                eggs = [_egg_name]
-                if 'project' in self.options:
-                    eggs.append(self.options['project'])
-                requirements, ws = self.egg.working_set(eggs)
+                requirements, ws = self.egg.working_set(self.eggs)
                 mod = dotted_import(mod, ws)
             except ImportError:
                 raise zc.buildout.UserError(
@@ -471,7 +468,7 @@ class Recipe(object):
             self.create_static() + 
             self.create_script()
         )
-        if self._template_namespace['boolify'](self.options['wsgi']):
+        if self._template_namespace['boolify'](self.options.get('wsgi', 'false')):
             files += self.create_wsgi_script()
         return tuple(files)
 
