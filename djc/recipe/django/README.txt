@@ -257,6 +257,7 @@ And run it ::
     start
     ...
     Installing django.
+    django: Specified project 'dummydjangoprj' not found, attempting install
     Getting distribution for 'dummydjangoprj'.
     ...
     django: Generating settings in ...
@@ -299,7 +300,7 @@ Let's look at this first ::
     >>> cat('parts', 'django', 'settings.py')
     ADMINS = (
     <BLANKLINE>
-        ('John Smith', 'root@localhost')
+        ('John Smith', 'root@localhost'),
     )
     MANAGERS = ADMINS
     <BLANKLINE>
@@ -346,6 +347,13 @@ Let's look at this first ::
         '.../dummydjangoprj/templates'
     )
     <BLANKLINE>
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 25
+    EMAIL_USE_TLS = False
+    <BLANKLINE>
+    CACHE_BACKEND = 'locmem:///'
+    CACHE_TIMEOUT = 60*5
+    CACHE_PREFIX = 'Z'
 
 As you can see, this is pretty much the standard Django ``settings.py`` as
 created by Django's ``django-admin``. It has the peculiarity of not residing in

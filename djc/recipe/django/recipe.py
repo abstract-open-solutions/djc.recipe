@@ -9,7 +9,7 @@ mere templating matter.
 The settings file is saved in ``parts/name/settings.py``.
 """
 
-import os, re, logging, random, shutil, imp, sys, collections
+import os, re, logging, random, shutil, imp, sys, collections, pprint
 import zc.recipe.egg
 from tempita import Template
 
@@ -287,6 +287,11 @@ class Recipe(object):
         template_definition = stream.read().decode('utf-8')
         stream.close()
         if 'settings-template-extension' in self.options:
+            self._logger.debug(
+                "Loading settings extension template from %s" % (
+                    self.options['settings-template-extension'],
+                )
+            )
             stream = open(
                 self.options['settings-template-extension'],
                 'rb'
@@ -294,12 +299,20 @@ class Recipe(object):
             template_definition += u"\n\n# Extension template %s\n\n"
             template_definition += stream.read().decode('utf-8')
             stream.close()
-        self._logger.info("Generating settings")
+
         variables = dict(normalize_keys(self.options))
         variables.update({ 'name': self.name, 'secret': self.secret })
+        self._logger.debug(
+            "Variable computation terminated:\n%s" % pprint.pformat(variables)
+        )
         template = Template(
             template_definition,
             namespace=self._template_namespace
+        )
+        self._logger.debug(
+            "Interpolating template, namespace is:\n%s" % pprint.pformat(
+                self._template_namespace
+            )
         )
         return template.substitute(variables)
 
@@ -352,7 +365,7 @@ class Recipe(object):
                         self.options['project'],
                     )
                 )
-                requirements, ws = self.working_set
+                requirements, ws = self.egg.working_set(self.eggs)
                 buildout = self.buildout['buildout']
                 if 'versions' in buildout and buildout['versions'] in self.buildout:
                     versions = self.buildout[buildout['versions']]
@@ -372,7 +385,10 @@ class Recipe(object):
                     versions = versions,
                     working_set = ws
                 )
-                requirements, ws = self.egg.working_set(self.eggs)
+                egg = zc.recipe.egg.Egg(
+                    self.buildout, self.options['project'], self.options
+                )
+                requirements, ws = egg.working_set([ self.options['project'] ])
                 project = dotted_import(
                     self.options['project'],
                     ws
