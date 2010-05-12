@@ -327,7 +327,7 @@ Let's look at this first ::
         'django.middleware.common.CommonMiddleware',
         'django.contrib.sessions.middleware.SessionMiddleware',
         'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.middleware.doc.XViewMiddleware'
+        'django.middleware.doc.XViewMiddleware',
     )
     <BLANKLINE>
     ROOT_URLCONF = 'dummydjangoprj.urls'
@@ -335,16 +335,16 @@ Let's look at this first ::
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
-        'django.contrib.admin'
+        'django.contrib.admin',
     )
     <BLANKLINE>
     TEMPLATE_LOADERS = (
         'django.template.loaders.filesystem.load_template_source',
-        'django.template.loaders.app_directories.load_template_source'
+        'django.template.loaders.app_directories.load_template_source',
     )
     <BLANKLINE>
     TEMPLATE_DIRS = (
-        '.../dummydjangoprj/templates'
+        '.../dummydjangoprj/templates',
     )
     <BLANKLINE>
     EMAIL_HOST = 'localhost'
