@@ -14,7 +14,7 @@ import zc.recipe.egg
 from tempita import Template
 
 
-_egg_name = 'djc.recipe.django'
+_egg_name = 'djc.recipe'
 _settings_name = 'settings.py'
 
 _wsgi_script_template = '''
@@ -336,7 +336,7 @@ class Recipe(object):
         return self._create_script(
             self.options.get('control-script', self.name),
             self.buildout['buildout']['bin-directory'],
-            'djc.recipe.django.manage',
+            'djc.recipe.manage',
             'main'
         )
 
@@ -348,7 +348,7 @@ class Recipe(object):
         script = self._create_script(
             '%s.wsgi.py' % self.name,
             self.options['location'],
-            'djc.recipe.django.wsgi',
+            'djc.recipe.wsgi',
             'main'
         )
         zc.buildout.easy_install.script_template = _script_template

@@ -16,7 +16,7 @@ long_description = (
     'Detailed Documentation\n'
     '**********************\n'
     + '\n' +
-    read('djc', 'recipe', 'django', 'README.txt')
+    read('djc', 'recipe', 'README.txt')
     + '\n' +
     'Contributors\n' 
     '************\n'
@@ -31,14 +31,14 @@ long_description = (
    'Download\n'
     '********\n'
     )
-entry_point = 'djc.recipe.django.recipe:Recipe'
+entry_point = 'djc.recipe.recipe:Recipe'
 entry_points = {"zc.buildout": ["default = %s" % entry_point]}
 
 tests_require=['zope.testing', 'zc.buildout']
 
-setup(name='djc.recipe.django',
+setup(name='djc.recipe',
       version=version,
-      description="A Django buildout",
+      description="A Django buildout recipe",
       long_description=long_description,
       # Get more strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
@@ -50,10 +50,10 @@ setup(name='djc.recipe.django',
       keywords='',
       author='Simone Deponti',
       author_email='simone.deponti@abstract.it',
-      url='http://svn.plone.org/svn/collective/',
+      url='http://git.abstract.it/abstract-collective/djc-recipe',
       license='BSD',
       packages=find_packages(exclude=['ez_setup']),
-      namespace_packages=['djc', 'djc.recipe'],
+      namespace_packages=['djc'],
       include_package_data=True,
       zip_safe=False,
       install_requires=['setuptools',
@@ -64,6 +64,6 @@ setup(name='djc.recipe.django',
                         ],
       tests_require=tests_require,
       extras_require=dict(tests=tests_require),
-      test_suite = 'djc.recipe.django.tests.test_docs.test_suite',
+      test_suite = 'djc.recipe.tests.test_docs.test_suite',
       entry_points=entry_points,
       )

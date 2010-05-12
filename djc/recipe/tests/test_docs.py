@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Doctest runner for 'djc.recipe.django'.
+Doctest runner for 'djc.recipe'.
 """
 __docformat__ = 'restructuredtext'
 
@@ -17,9 +17,9 @@ optionflags =  (doctest.ELLIPSIS |
 def setUp(test):
     normpath, join, dirname = os.path.normpath, os.path.join, os.path.dirname
     zc.buildout.testing.buildoutSetUp(test)
-    zc.buildout.testing.install_develop('djc.recipe.django', test)
+    zc.buildout.testing.install_develop('djc.recipe', test)
     try:
-        tmpdir = tempfile.mkdtemp(prefix='djc.recipe.django.tests')
+        tmpdir = tempfile.mkdtemp(prefix='djc.recipe.tests')
         shutil.copytree(
             normpath(join(dirname(__file__), '..', 'testing')),
             join(tmpdir, 'dummydjangoprj')

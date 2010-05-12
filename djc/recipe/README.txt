@@ -247,7 +247,7 @@ That cleared, we create the most simple buildout conceivable using this recipe :
     ... find-links = packages
     ...
     ... [django]
-    ... recipe = djc.recipe.django
+    ... recipe = djc.recipe
     ... project = dummydjangoprj
     ... """)
 
@@ -370,10 +370,10 @@ Let's have a look at the manage script ::
       ...
       ]
     <BLANKLINE>
-    import djc.recipe.django.manage
+    import djc.recipe.manage
     <BLANKLINE>
     if __name__ == '__main__':
-        djc.recipe.django.manage.main('.../parts/django/settings.py')
+        djc.recipe.manage.main('.../parts/django/settings.py')
 
 As we can see, the ``main()`` function of the ``manage`` module is called,
 passing in the file with the settings as only argument.
