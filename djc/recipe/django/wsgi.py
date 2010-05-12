@@ -12,6 +12,7 @@ def main(settings_file, logfile=None):
                             % (settings_file, e))
         return sys.exit(1)
 
+    imp.release_lock()
     # Setup settings
     setup_environ(mod, '_django_settings')
 
