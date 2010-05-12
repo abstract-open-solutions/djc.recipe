@@ -48,7 +48,7 @@ SECRET_KEY = '{{secret}}'
 
 {{if middleware}}
 MIDDLEWARE_CLASSES = (
-    {{join(listify(middleware),"',\n    '","'","'")}}
+    {{join(listify(middleware),"',\n    '","'","',")}}
 )
 {{endif}}
 
@@ -56,29 +56,29 @@ ROOT_URLCONF = '{{urlconf}}'
 
 {{if apps}}
 INSTALLED_APPS = (
-    {{join(listify(apps),"',\n    '","'","'")}}
+    {{join(listify(apps),"',\n    '","'","',")}}
 )
 {{endif}}
 
 {{if template_loaders}}
 TEMPLATE_LOADERS = (
-    {{join(listify(template_loaders),"',\n    '","'","'")}}
+    {{join(listify(template_loaders),"',\n    '","'","',")}}
 )
 {{endif}}
 
 {{if templates}}
 TEMPLATE_DIRS = (
-    {{join(listify(templates),"',\n    '","'","'")}}
+    {{join(listify(templates),"',\n    '","'","',")}}
 )
 {{endif}}
 {{if template_context_processors}}
 TEMPLATE_CONTEXT_PROCESSORS = (
-    {{join(listify(template_context_processors),"',\n    '","'","'")}}
+    {{join(listify(template_context_processors),"',\n    '","'","',")}}
 )
 {{endif}}
 {{if authentication_backends}}
 AUTHENTICATION_BACKENDS = (
-    {{join(listify(authentication_backends),"',\n    '","'","'")}}
+    {{join(listify(authentication_backends),"',\n    '","'","',")}}
 )
 {{endif}}
 {{if languages}}
