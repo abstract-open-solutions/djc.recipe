@@ -3,7 +3,7 @@
 This recipe allows you to setup a Django_ project through `zc.buildout`_.
 
 Usage
-=====
+*****
 
 The main scope of the recipe is to abstract out the ``settings.py`` file,
 allowing settings to reside inside the buildout instead of having them reside
@@ -128,17 +128,17 @@ a buildout used for Satchmo_: ::
 As you can see, a lot more options are used, including an extension template
 (the default template with appended the given template).
 
-See `Basic options`_, `Default template options`_ and `Example usage`_ for more
+See Options_, `Default template options`_ and `Example usage`_ for more
 details.
 
 Links
-=====
+*****
 
-- Code repository: http://gitorious.org/abstract/djc.recipe
-- Questions and comments to simone DOT deponti AT abstract.it
-- Report bugs at http://github.com/shywolf9982/djc.recipe.django/issues
+- Code repository: http://gitorious.org/djc-recipe
+- Questions and comments to team@abstract.it
+- Report bugs at http://open.abstract.it/it/progetti/rilasci-abstract/djc.recipe
 
 .. _Django: http://www.djangoproject.com/
 .. _`zc.buildout`: http://www.buildout.org/
-.. _Tempita: http://pypi.python.org/pypi/Tempita
 .. _Satchmo: http://www.satchmoproject.com
+
