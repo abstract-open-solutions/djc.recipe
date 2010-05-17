@@ -537,7 +537,7 @@ file ::
 
 As you can see, the builtin template has been totally discarded.
 
-.. _Tempita: http://pythonpaste.org/Tempita/
+.. _Tempita: http://pypi.python.org/pypi/Tempita/
 
 .. _`mr.developer`: http://pypi.python.org/pypi/mr.developer
 
