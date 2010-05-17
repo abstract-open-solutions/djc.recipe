@@ -134,9 +134,9 @@ details.
 Links
 *****
 
-- Code repository: http://gitorious.org/djc-recipe
-- Questions and comments to team@abstract.it
-- Report bugs at http://open.abstract.it/it/progetti/rilasci-abstract/djc.recipe
+- Code repository: http://gitorious.org/djc-recipe/djc-recipe
+- Report bugs at http://open.abstract.it/it/progetti/rilasci-abstract/djc.recipe/issues
+- Comments and questions at info@abstract.it
 
 .. _Django: http://www.djangoproject.com/
 .. _`zc.buildout`: http://www.buildout.org/
