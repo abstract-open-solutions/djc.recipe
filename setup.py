@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-version = '0.1'
+version = '0.2'
 
 long_description = (
     read('README.txt')
@@ -27,9 +27,6 @@ long_description = (
     '**************\n'
     + '\n' + 
     read('CHANGES.txt')
-    + '\n' +
-   'Download\n'
-    '********\n'
     )
 entry_point = 'djc.recipe.recipe:Recipe'
 entry_points = {"zc.buildout": ["default = %s" % entry_point]}
@@ -43,10 +40,11 @@ setup(name='djc.recipe',
       # Get more strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=[
         'Framework :: Buildout',
+        'Framework :: Django',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'License :: OSI Approved :: BSD License',
-        ],
+      ],
       keywords='',
       author='Simone Deponti',
       author_email='simone.deponti@abstract.it',

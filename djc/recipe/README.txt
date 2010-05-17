@@ -378,6 +378,161 @@ Let's have a look at the manage script ::
 As we can see, the ``main()`` function of the ``manage`` module is called,
 passing in the file with the settings as only argument.
 
+Template overriding
+-------------------
+
+As it was said in Templating_, the default template can be overridden or
+extended.
+
+Let's start by extending it: ::
+
+    >>> write('template-extension.py.in',
+    ... """
+    ... # Here we can extend the template, using variables pulled in from the
+    ... # buildout section, with the dashes converted to underscores
+    ... MY_CONFIG_VARIABLE = '{{config_variable_one}}'
+    ... """)
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... settings-template-extension = template-extension.py.in
+    ... config-variable-one = test
+    ... """)
+
+Launch the buildout and then take a look at the generated ``settings.py``
+file ::
+
+    >>> print system(buildout)
+    Uninstalling django.
+    Installing django.
+    ...
+    Generated script ...
+    <BLANKLINE>
+    >>> cat('parts', 'django', 'settings.py')
+    ADMINS = (
+    <BLANKLINE>
+        ('John Smith', 'root@localhost'),
+    )
+    MANAGERS = ADMINS
+    <BLANKLINE>
+    <BLANKLINE>
+    DATABASE_ENGINE = 'sqlite3'
+    DATABASE_NAME = 'storage.db'
+    DATABASE_USER = ''
+    DATABASE_PASSWORD = ''
+    DATABASE_HOST = ''
+    DATABASE_PORT = ''
+    <BLANKLINE>
+    TIME_ZONE = 'America/Chicago'
+    <BLANKLINE>
+    LANGUAGE_CODE = 'en-us'
+    <BLANKLINE>
+    MEDIA_ROOT = '.../static'
+    <BLANKLINE>
+    MEDIA_URL = '/media/'
+    <BLANKLINE>
+    ADMIN_MEDIA_PREFIX = '/admin_media/'
+    <BLANKLINE>
+    SECRET_KEY = '...'
+    MIDDLEWARE_CLASSES = (
+        'django.middleware.common.CommonMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.middleware.doc.XViewMiddleware',
+    )
+    <BLANKLINE>
+    ROOT_URLCONF = 'dummydjangoprj.urls'
+    INSTALLED_APPS = (
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.admin',
+    )
+    <BLANKLINE>
+    TEMPLATE_LOADERS = (
+        'django.template.loaders.filesystem.load_template_source',
+        'django.template.loaders.app_directories.load_template_source',
+    )
+    <BLANKLINE>
+    TEMPLATE_DIRS = (
+        '.../dummydjangoprj/templates',
+    )
+    <BLANKLINE>
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 25
+    EMAIL_USE_TLS = False
+    <BLANKLINE>
+    CACHE_BACKEND = 'locmem:///'
+    CACHE_TIMEOUT = 60*5
+    CACHE_PREFIX = 'Z'
+    <BLANKLINE>
+    <BLANKLINE>
+    # Extension template %s
+    <BLANKLINE>
+    <BLANKLINE>
+    # Here we can extend the template, using variables pulled in from the
+    # buildout section, with the dashes converted to underscores
+    MY_CONFIG_VARIABLE = 'test'
+
+As you can see, the aditional template has been simply appended to the default,
+and the variable ``config-variable-one`` has been substituted.
+
+If, instead, we totally override the template: ::
+
+    >>> write('template.py.in',
+    ... """
+    ... # Total override
+    ... FOODS = (
+    ...     {{join(listify(foods), "',\\n    '", "'", "',")}}
+    ... )
+    ... """)
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... settings-template = template.py.in
+    ... foods =
+    ...     spam
+    ...     spam
+    ...     eggs
+    ...     spam
+    ... """)
+
+
+Launch the buildout and then take a look at the generated ``settings.py``
+file ::
+
+    >>> print system(buildout)
+    Uninstalling django.
+    Installing django.
+    ...
+    Generated script ...
+    <BLANKLINE>
+    >>> cat('parts', 'django', 'settings.py')
+    # Total override
+    FOODS = (
+        'spam',
+        'spam',
+        'eggs',
+        'spam',
+    )
+
+As you can see, the builtin template has been totally discarded.
 
 .. _tempita: http://pythonpaste.org/tempita/
 
