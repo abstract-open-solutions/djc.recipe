@@ -227,6 +227,9 @@ cache-timeout
 cache-prefix
     The cache prefix (prefixed at all cache IDs). Defaults to ``Z``.
 
+fixture-dirs
+    The directories into which search for fixtures. Not set by default.
+
 
 Example usage
 =============

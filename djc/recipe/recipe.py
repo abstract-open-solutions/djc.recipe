@@ -172,6 +172,8 @@ class Recipe(object):
 
         self.options.setdefault('debug', 'false')
 
+        self.options.setdefault('fixture-dirs', '')
+
         self.eggs = [ _egg_name ]
         if 'eggs' in self.buildout['buildout']:
             self.eggs.extend(self.buildout['buildout']['eggs'].split())

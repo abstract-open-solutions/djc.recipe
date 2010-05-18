@@ -118,3 +118,8 @@ CACHE_PREFIX = '{{cache_prefix}}'
 DEBUG=True
 TEMPLATE_DEBUG=DEBUG
 {{endif}}
+{{if fixture_dirs}}
+FIXTURE_DIRS = (
+    {{join(listify(fixture_dirs),"',\n    '","'","',")}}
+)
+{{endif}}
