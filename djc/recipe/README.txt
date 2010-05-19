@@ -38,7 +38,7 @@ settings-template-extension
 
 media-origin
     If specified, defines directories from which to copy the static files that
-    have to go in ``media-directory``: see ``Media origin``_ for more details.
+    have to go in ``media-directory``: see `Media origin`_ for more details.
 
 base-settings
     A settings module (only absolute imports) that is extended by the current
