@@ -37,11 +37,8 @@ settings-template-extension
     ``settings template`` or to the default one.
 
 media-origin
-    If specified, defines a directory from which to copy the static files that
-    have to go in ``media-directory``: the files will be copied over only if
-    ``media-directory`` does not exists. The origin takes the form of
-    ``my.module: directory`` where *my.module* is a python module and
-    *directory* a directory inside it.
+    If specified, defines directories from which to copy the static files that
+    have to go in ``media-directory``: see ``Media origin``_ for more details.
 
 base-settings
     A settings module (only absolute imports) that is extended by the current
@@ -292,6 +289,7 @@ script and a ``parts/django`` part ::
     d  eggs
     d  packages
     d  parts
+    d  src
     d  static
     >>> ls('bin')
     -  buildout
@@ -539,6 +537,211 @@ file ::
     )
 
 As you can see, the builtin template has been totally discarded.
+
+Media origin
+============
+
+Static files are generally not served through Django_, but instead the
+front-end web server takes care to serve them by exposing a directory on the
+filesystem to the web.
+
+However, many static files (think ``.js`` or ``.css``) are part of the
+functionality of a project or application, and would be interesting to be able
+to distribute them alongside the code.
+
+.. note:: The method here described works only for applications and packages
+   that are not installed as zipped modules: for example the egg default format
+   is a zipped file that does not get extracted after installation unless a
+   proper option is passed to ``easy_install``
+
+The relevant resources can be included in the distributed package and use of
+the ``media-origin`` option will allow them to be copied into the
+``media-directory`` folder (see Options_).
+
+``media-origin`` can contain a list of static file sources, and each item of
+the list can be either in the form ``package:directory`` or
+``package:directory:destination``; ``package`` being the full dotted name of
+the importable module, ``directory`` the path to the directory inside the
+module containing static data, and ``destination`` an optional subdirectory
+inside ``media-directory`` where to copy the files.
+
+Let's then begin from the first, simple case, with a single source of static
+data.
+
+The source of static data is the package ``dummydjangoapp1``, residing as a
+developement package inside ``src``. ::
+
+    >>> ls('src', 'dummydjangoapp1', 'dummydjangoapp1', 'static')
+    -  lib1.js
+    -  main.css
+    >>> cat('src', 'dummydjangoapp1', 'dummydjangoapp1', 'static', 'main.css')
+    body { font-family: "Helvetica" "Arial" sans-serif; }
+
+Let's create a buildout config and run it ::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ... develop = src/dummydjangoapp1
+    ... eggs = dummydjangoapp1
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... media-directory = static
+    ... media-origin = dummydjangoapp1:static
+    ... """)
+    >>> rmdir('static')
+    >>> print system(buildout)
+    Develop: '.../dummydjangoapp1'
+    ...
+    Uninstalling django.
+    Installing django.
+    ...
+    django: Making media directory '.../static'
+    ...
+    Generated script ...
+    <BLANKLINE>
+
+And now let's see what's in ``static`` ::
+
+    >>> ls('static')
+    -  lib1.js
+    -  main.css
+    >>> cat('static', 'main.css')
+    body { font-family: "Helvetica" "Arial" sans-serif; }
+
+Let's now try using *two* sources: the second is another dummy app, named
+``dummydjangoapp2``, that like the first one resides in ``src``.
+
+Let's see what's in its ``static`` for us: ::
+
+    >>> ls('src', 'dummydjangoapp2', 'dummydjangoapp2', 'static')
+    -  lib2.js
+    -  main.css
+
+It seems this app too defines a ``main.css``, so let's look at the content: ::
+
+    >>> cat('src', 'dummydjangoapp2', 'dummydjangoapp2', 'static', 'main.css')
+    h1 { color: #92B8D8; }
+
+But this poses a problem! What happens when I put this as second source, and
+both define ``main.css``? Well, the intuitive thing to do here is probably to
+override the file, so that the source at the bottom is the top *skin layer*.
+
+So if we have this buildout ::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ... develop =
+    ...     src/dummydjangoapp1
+    ...     src/dummydjangoapp2
+    ... eggs =
+    ...     dummydjangoapp1
+    ...     dummydjangoapp2
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... media-directory = static
+    ... media-origin =
+    ...     dummydjangoapp1:static
+    ...     dummydjangoapp2:static
+    ... """)
+
+It is reasonable to expect that, after running it, the content of the
+``main.css`` file is the one provided by the version held by
+``dummydjangoapp2`` rather than the one held by ``dummydjangoapp2``.
+
+A quick run and inspect confirms this: ::
+
+    >>> rmdir('static')
+    >>> print system(buildout)
+    Develop: '.../dummydjangoapp1'
+    ...
+    Uninstalling django.
+    Installing django.
+    ...
+    django: Making media directory '.../static'
+    ...
+    Generated script ...
+    <BLANKLINE>
+    >>> ls('static')
+    -  lib1.js
+    -  lib2.js
+    -  main.css
+    >>> cat('static', 'main.css')
+    h1 { color: #92B8D8; }
+
+However, I might not want the ``main.css`` override to happen, or any other
+clash between applications, for that matter. That is easily solved by a
+buildout written like this ::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ... develop =
+    ...     src/dummydjangoapp1
+    ...     src/dummydjangoapp2
+    ... eggs =
+    ...     dummydjangoapp1
+    ...     dummydjangoapp2
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... media-directory = static
+    ... media-origin =
+    ...     dummydjangoapp1:static:app1
+    ...     dummydjangoapp2:static:app2
+    ... """)
+
+It is to be noticed that the ``media-origin`` values have now three elements,
+the latter being the destination directory, which is defined as a subdirectory
+of ``static``: in this case, both apps live in their subdirectory and no clash
+happens ::
+
+    >>> rmdir('static')
+    >>> print system(buildout)
+    Develop: '.../dummydjangoapp1'
+    ...
+    Uninstalling django.
+    Installing django.
+    ...
+    django: Making media directory '.../static'
+    ...
+    Generated script ...
+    <BLANKLINE>
+    >>> ls('static')
+    d  app1
+    d  app2
+    >>> ls('static', 'app1')
+    -  lib1.js
+    -  main.css
+    >>> cat('static', 'app1', 'main.css')
+    body { font-family: "Helvetica" "Arial" sans-serif; }
+    >>> ls('static', 'app2')
+    -  lib2.js
+    -  main.css
+    >>> cat('static', 'app2', 'main.css')
+    h1 { color: #92B8D8; }
+
+Of course, this behaviour is not usefol only in this case: an application might
+actually require you to put the static files in a precise subdirectory
+irrespective of the fact that other apps might be present or a clash occur.
 
 .. _Tempita: http://pypi.python.org/pypi/Tempita/
 

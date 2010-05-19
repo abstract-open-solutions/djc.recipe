@@ -18,10 +18,21 @@ def setUp(test):
     normpath, join, dirname = os.path.normpath, os.path.join, os.path.dirname
     zc.buildout.testing.buildoutSetUp(test)
     zc.buildout.testing.install_develop('djc.recipe', test)
+    src = join(test.globs['sample_buildout'], 'src')
+    zc.buildout.testing.mkdir(src)
+    for app in ['dummydjangoapp1', 'dummydjangoapp2']:
+        shutil.copytree(
+            normpath(join(dirname(__file__), '..', 'testing', 'src', app)),
+            join(src, app)
+        )
     try:
         tmpdir = tempfile.mkdtemp(prefix='djc.recipe.tests')
         shutil.copytree(
-            normpath(join(dirname(__file__), '..', 'testing')),
+            normpath(
+                join(
+                    dirname(__file__), '..', 'testing', 'src', 'dummydjangoprj'
+                )
+            ),
             join(tmpdir, 'dummydjangoprj')
         )
         packages = join(test.globs['sample_buildout'], 'packages')
@@ -34,6 +45,7 @@ def setUp(test):
         raise
     finally:
         shutil.rmtree(tmpdir)
+
 
 def test_suite():
     suite = unittest.TestSuite((

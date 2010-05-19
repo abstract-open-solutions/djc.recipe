@@ -31,6 +31,41 @@ application = %(module_name)s.%(attrs)s(%(arguments)s)
 '''
 
 
+def get_destination(fullpath, origin, destination):
+    components = [ destination ] + fullpath[len(origin):].split(os.sep)
+    return os.path.join(*components)
+
+
+def copytree(origin, destination, logger):
+    if not os.path.isdir(destination):
+        logger.debug("Creating missing destination %s" % destination)
+        os.makedirs(destination)
+    for root, dirs, files in os.walk(origin):
+        for name in files:
+            origin_path = os.path.join(root, name)
+            destination_path = get_destination(
+                origin_path, origin, destination
+            )
+            logger.debug(
+                "Copying %s to %s" % (origin_path, destination_path)
+            )
+            origin_fp = open(origin_path, "rb")
+            destination_fp = open(destination_path, "wb")
+            destination_fp.write(origin_fp.read())
+            origin_fp.close()
+            destination_fp.close()
+        for name in dirs:
+            origin_path = os.path.join(root, name)
+            destination_path = get_destination(
+                origin_path, origin, destination
+            )
+            if not os.path.isdir(destination_path):
+                logger.debug(
+                    "Making intermediate directory %s" % destination_path
+                )
+                os.mkdir(destination_path)
+
+
 def dotted_import(dotted_name, ws, extra_paths = []):
     """Tries to load a dotted name
     """
@@ -404,6 +439,46 @@ class Recipe(object):
                 os.path.join(os.path.dirname(project.__file__), 'templates')
             )
 
+    def copy_origin(self, origin, destination):
+        self._logger.info(
+            "Copying media from '%s' to '%s'" % (origin, destination)
+        )
+        try:
+            components = origin.split(':')
+            mod, directory = components[:2]
+        except ValueError:
+            raise zc.buildout.UserError(
+                "Error in '%s': media_origin must be in the form "
+                "'custom.module:directory'" % self.name
+            )
+        try:
+            requirements, ws = self.egg.working_set(self.eggs)
+            mod = dotted_import(mod, ws)
+        except ImportError:
+            raise zc.buildout.UserError(
+                "Error in '%s': media_origin is '%s' "
+                "but we cannot find module '%s'" % (self.name, origin, mod)
+            )
+        orig_directory = os.path.join(
+            os.path.dirname(mod.__file__),
+            directory
+        )
+        if not os.path.isdir(orig_directory):
+            raise zc.buildout.UserError(
+                "Error in '%s': media_origin is '%s' "
+                "but '%s' does not seem to be a directory" % (
+                    self.name, origin, directory
+                )
+            )
+        if len(components) > 2:
+            copytree(
+                orig_directory,
+                os.path.join(destination, components[2]),
+                self._logger
+            )
+        else:
+            copytree(orig_directory, destination, self._logger)
+
     def create_static(self):
         media_directory = os.path.join(
             self.buildout['buildout']['directory'],
@@ -416,40 +491,11 @@ class Recipe(object):
             return [ media_directory ]
         if 'media-origin' in self.options:
             self._logger.info(
-                "Copying media from '%s' to '%s'" % (
-                    self.options['media-origin'],
-                    media_directory
-                )
+                "Making media directory '%s'" % media_directory
             )
-            try:
-                mod, directory = self.options['media-origin'].split(':')
-            except ValueError:
-                raise zc.buildout.UserError(
-                    "Error in '%s': media_origin must be in the form "
-                    "'custom.module:directory'" % self.name
-                )
-            try:
-                requirements, ws = self.egg.working_set(self.eggs)
-                mod = dotted_import(mod, ws)
-            except ImportError:
-                raise zc.buildout.UserError(
-                    "Error in '%s': media_origin is '%s' "
-                    "but we cannot find module '%s'" % (
-                        self.name, self.options['media-origin'], mod
-                    )
-                )
-            orig_directory = os.path.join(
-                os.path.dirname(mod.__file__),
-                directory
-            )
-            if not os.path.isdir(orig_directory):
-                raise zc.buildout.UserError(
-                    "Error in '%s': media_origin is '%s' "
-                    "but '%s' does not seem to be a directory" % (
-                        self.name, self.options['media-origin'], directory
-                    )
-                )
-            shutil.copytree(orig_directory, media_directory)
+            os.makedirs(media_directory)
+            for origin in self.options['media-origin'].split():
+                self.copy_origin(origin, media_directory)
         else:
             self._logger.info(
                 "Making empty media directory '%s'" % media_directory
