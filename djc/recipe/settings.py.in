@@ -120,6 +120,8 @@ TEMPLATE_DEBUG=DEBUG
 {{endif}}
 {{if fixture_dirs}}
 FIXTURE_DIRS = (
-    {{join(listify(fixture_dirs),"',\n    '","'","',")}}
+{{for fixture_dir in listify(fixture_dirs)}}
+    '{{absolute_path(fixture_dir)}}',
+{{endfor}}
 )
 {{endif}}
