@@ -479,7 +479,7 @@ file ::
     CACHE_PREFIX = 'Z'
     <BLANKLINE>
     <BLANKLINE>
-    # Extension template %s
+    # Extension template template-extension.py.in
     <BLANKLINE>
     <BLANKLINE>
     # Here we can extend the template, using variables pulled in from the

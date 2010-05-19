@@ -333,7 +333,9 @@ class Recipe(object):
                 self.options['settings-template-extension'],
                 'rb'
             )
-            template_definition += u"\n\n# Extension template %s\n\n"
+            template_definition += u"\n\n# Extension template %s\n\n" % (
+                self.options['settings-template-extension'],
+            )
             template_definition += stream.read().decode('utf-8')
             stream.close()
 
