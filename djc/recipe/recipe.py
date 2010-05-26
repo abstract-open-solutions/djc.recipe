@@ -31,6 +31,16 @@ application = %(module_name)s.%(attrs)s(%(arguments)s)
 '''
 
 
+def touch(path, content = ''):
+    if os.path.isfile(path):
+        fp = open(path, 'wb')
+    else:
+        fp = open(path, 'ab')
+        content = ''
+    fp.write(content)
+    fp.close()
+
+
 def get_destination(fullpath, origin, destination):
     components = [ destination ] + fullpath[len(origin):].split(os.sep)
     return os.path.join(*components)
@@ -384,9 +394,18 @@ class Recipe(object):
         zc.buildout.easy_install.script_template = \
                 zc.buildout.easy_install.script_header + \
                     _wsgi_script_template
-        script = self._create_script(
-            '%s.wsgi.py' % self.name,
+        # uwsgi needs a module in the pythonpath to load it out, so we satisfy
+        # uwsgi's pressing needs
+        module_path = os.path.join(
             self.options['location'],
+            'djc_recipe_%s' % self.name
+        )
+        if os.path.isdir(module_path):
+            os.mkdir(module_path)
+        touch(os.path.join(module_path, '__init__.py'), content = '#')
+        script = self._create_script(
+            'app.py',
+            module_path,
             'djc.recipe.wsgi',
             'main'
         )

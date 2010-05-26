@@ -743,6 +743,56 @@ Of course, this behaviour is not usefol only in this case: an application might
 actually require you to put the static files in a precise subdirectory
 irrespective of the fact that other apps might be present or a clash occur.
 
+WSGI
+====
+
+The ``wsgi`` option will create a small module [#]_ inside ``parts``, that will
+allow you to hook your application to an upstream ``wsgi`` server.
+
+In order to have the ``buildout``, we must set the ``wsgi`` option of the
+recipe to ``true``: ::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... wsgi = true
+    ... """)
+
+And launch the buildout: ::
+
+    >>> print "start\n", system(buildout) 
+    start
+    ...
+    Installing django.
+    django: Specified project 'dummydjangoprj' not found, attempting install
+    Getting distribution for 'dummydjangoprj'.
+    ...
+    django: Generating settings in ...
+    django: Making empty media directory ...
+    django: Creating script at ...
+    Generated script ...
+    <BLANKLINE>
+
+The script will then create inside ``parts/<part_name>/djc_recipe_<part_name>``
+a python module containing an ``app.py`` file, which can be loaded by
+``Apache`` or ``uwsgi``: ::
+
+    >>> ls('parts', 'django', 'djc_recipe_django')
+    -  __init__.py
+    -  app.py
+    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+
+This will take care to inject all the needed paths into ``sys.path``, so no
+further meddling should be needed.
+
 .. _Tempita: http://pypi.python.org/pypi/Tempita/
 
 .. _`mr.developer`: http://pypi.python.org/pypi/mr.developer
@@ -750,5 +800,9 @@ irrespective of the fact that other apps might be present or a clash occur.
 .. [#] In all truth, it tries to read it from ``.secret.txt``: that failing the
        secret code is generated and written to said file to be used
        subsequently.
+
+.. [#] The small module is needed because ``uwsgi`` will refuse to load a rogue
+       script, but will load a module (hence, with some ``PYTHONPATH`` magic,
+       all comes along)
 
 
