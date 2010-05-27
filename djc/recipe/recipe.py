@@ -365,19 +365,26 @@ class Recipe(object):
         )
         return template.substitute(variables)
 
-    def _create_script(self, name, path, module, attr):
+    def _create_script(self, name, path, module, attr, extra_attr = []):
         requirements, ws = self.egg.working_set(self.eggs)
         self._logger.info(
             "Creating script at %s" % (os.path.join(path, name),)
         )
+        if len(extra_attr) > 0:
+            extras = ", " + ", ".join(extra_attr)
+        else:
+            extras = ''
         return zc.buildout.easy_install.scripts(
             [(name, module, attr)],
             ws, self.options['executable'],
             path,
             extra_paths = self.extra_paths,
-            arguments = "'%s'" % os.path.join(
-                self.options['location'],
-                _settings_name
+            arguments = "'%s'%s" % (
+                os.path.join(
+                    self.options['location'],
+                    _settings_name
+                ),
+                extras
             )
         )
 
