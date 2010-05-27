@@ -410,11 +410,20 @@ class Recipe(object):
         if os.path.isdir(module_path):
             os.mkdir(module_path)
         touch(os.path.join(module_path, '__init__.py'), content = '#')
+        extras = []
+        if 'wsgi-logfile' in self.options:
+            extras.append(
+                "logfile = '%s'" % os.path.join(
+                    self.buildout['buildout']['directory'],
+                    self.options['wsgi_logfile']
+                )
+            )
         script = self._create_script(
             'app.py',
             module_path,
             'djc.recipe.wsgi',
-            'main'
+            'main',
+            extras
         )
         zc.buildout.easy_install.script_template = _script_template
         return script

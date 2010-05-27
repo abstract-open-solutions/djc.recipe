@@ -52,6 +52,9 @@ wsgi
     script in ``parts/$partname`` named ``$partname.wsgi.py`` that can be used
     as WSGI script in Apache or other WSGI enabled webserver.
 
+wsgi-logfile
+    If set, the log will be redirected here: defaults to not being set.
+
 
 Advanced options
 ----------------
