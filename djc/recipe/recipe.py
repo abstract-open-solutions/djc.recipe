@@ -407,7 +407,7 @@ class Recipe(object):
             self.options['location'],
             'djc_recipe_%s' % self.name
         )
-        if os.path.isdir(module_path):
+        if not os.path.isdir(module_path):
             os.mkdir(module_path)
         touch(os.path.join(module_path, '__init__.py'), content = '#')
         extras = []
@@ -415,7 +415,7 @@ class Recipe(object):
             extras.append(
                 "logfile = '%s'" % os.path.join(
                     self.buildout['buildout']['directory'],
-                    self.options['wsgi_logfile']
+                    self.options['wsgi-logfile']
                 )
             )
         script = self._create_script(

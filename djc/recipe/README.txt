@@ -776,12 +776,12 @@ And launch the buildout: ::
     ...
     Installing django.
     django: Specified project 'dummydjangoprj' not found, attempting install
-    Getting distribution for 'dummydjangoprj'.
-    ...
     django: Generating settings in ...
     django: Making empty media directory ...
-    django: Creating script at ...
-    Generated script ...
+    django: Creating script at .../bin/django
+    Generated script '.../bin/django'.
+    django: Creating script at .../parts/django/djc_recipe_django/app.py
+    Generated script '.../parts/django/djc_recipe_django/app.py'.
     <BLANKLINE>
 
 The script will then create inside ``parts/<part_name>/djc_recipe_<part_name>``
@@ -792,9 +792,76 @@ a python module containing an ``app.py`` file, which can be loaded by
     -  __init__.py
     -  app.py
     >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+    #!...
+    <BLANKLINE>
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    import djc.recipe.wsgi
+    <BLANKLINE>
+    application = djc.recipe.wsgi.main('.../parts/django/settings.py')
+
 
 This will take care to inject all the needed paths into ``sys.path``, so no
 further meddling should be needed.
+
+Most *WSGI* servers do handle logging effectively by themselves, however if
+this was not the case, an option to have a separate log output can be used:
+``wsgi-logfile``, if set, will cause all the applicative log output to be
+written to the specified file.
+
+Let's write the buildout ::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... wsgi = true
+    ... wsgi-logfile = wsgi.log
+    ... """)
+
+Launch it ::
+
+    >>> print "start\n", system(buildout) 
+    start
+    ...
+    Installing django.
+    django: Specified project 'dummydjangoprj' not found, attempting install
+    django: Generating settings in ...
+    django: Making empty media directory ...
+    django: Creating script at .../bin/django
+    Generated script '.../bin/django'.
+    django: Creating script at .../parts/django/djc_recipe_django/app.py
+    Generated script '.../parts/django/djc_recipe_django/app.py'.
+    <BLANKLINE>
+
+And check what changes ::
+
+    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+    #!...
+    <BLANKLINE>
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    import djc.recipe.wsgi
+    <BLANKLINE>
+    application = djc.recipe.wsgi.main(..., logfile = '.../wsgi.log')
+
+As you can see, the log file parameter is passed to the application: it is to
+be noted that all relative paths are intended as relative to the buildout root.
 
 .. _Tempita: http://pypi.python.org/pypi/Tempita/
 
