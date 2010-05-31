@@ -9,7 +9,7 @@ mere templating matter.
 The settings file is saved in ``parts/name/settings.py``.
 """
 
-import os, re, logging, random, shutil, imp, sys, collections, pprint
+import os, re, logging, random, sys, pprint
 import zc.recipe.egg
 from tempita import Template
 
@@ -76,35 +76,31 @@ def copytree(origin, destination, logger):
                 os.mkdir(destination_path)
 
 
-def dotted_import(dotted_name, ws, extra_paths = []):
-    """Tries to load a dotted name
-    """
-    paths = [ dist.location for dist in ws ]
-    paths.extend(extra_paths)
-    components = collections.deque(dotted_name.split('.'))
-    paths = sys.path + paths
-    load = True
+def dotted_import(module, paths):
+    old_syspath = sys.path
+    sys.path = list(set(sys.path) | set(paths))
+    components = module.split('.')
     mod = None
     try:
-        imp.acquire_lock()
-        while len(components) > 0:
-            component = components.popleft()
-            if load:
-                try:
-                    p, f, d = imp.find_module(component, paths)
-                except ValueError:
-                    raise ImportError(dotted_name)
-                mod = imp.load_module(component, p, f, d)
-                try:
-                    paths = mod.__path__
-                except AttributeError:
-                    load = False
+        mod = __import__(module)
+    except ImportError:
+        for i in xrange(1, len(components)):
+            try:
+                mod = __import__(".".join(components[:-1*i]))
+            except ImportError:
+                pass
             else:
-                mod = getattr(mod, component)
-    except Exception:
-        imp.release_lock()
-        raise
-    imp.release_lock()
+                break
+        components = components[i:]
+    if mod is None:
+        raise ImportError("Could not import %s" % module)
+    if module != mod.__name__:
+        for submod in module[len(mod.__name__)+1:].split('.'):
+            try:
+                mod = getattr(mod, submod)
+            except AttributeError:
+                mod = __import__("%s.%s" % (mod.__name__, submod))
+    sys.path = old_syspath
     return mod
 
 
@@ -521,23 +517,20 @@ class Recipe(object):
             self.buildout['buildout']['directory'],
             self.options['media-directory']
         )
-        if os.path.exists(media_directory):
-            self._logger.info(
-                "Media directory %s exists, skipping" % media_directory
-            )
-            return [ media_directory ]
         if 'media-origin' in self.options:
-            self._logger.info(
-                "Making media directory '%s'" % media_directory
-            )
-            os.makedirs(media_directory)
+            if not os.path.isdir(media_directory):
+                self._logger.info(
+                    "Making media directory '%s'" % media_directory
+                )
+                os.makedirs(media_directory)
             for origin in self.options['media-origin'].split():
                 self.copy_origin(origin, media_directory)
         else:
-            self._logger.info(
-                "Making empty media directory '%s'" % media_directory
-            )
-            os.makedirs(media_directory)
+            if not os.path.isdir(media_directory):
+                self._logger.info(
+                    "Making empty media directory '%s'" % media_directory
+                )
+                os.makedirs(media_directory)
         return [ media_directory ]
 
     def create_project(self):
