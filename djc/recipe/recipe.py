@@ -84,6 +84,7 @@ def dotted_import(module, paths):
     try:
         mod = __import__(module)
     except ImportError:
+        i = 1
         for i in xrange(1, len(components)):
             try:
                 mod = __import__(".".join(components[:-1*i]))
@@ -428,7 +429,10 @@ class Recipe(object):
         if 'project' in self.options:
             try:
                 requirements, ws = self.egg.working_set(self.eggs)
-                project = dotted_import(self.options['project'], ws)
+                project = dotted_import(
+                    self.options['project'],
+                    [d.location for d in ws]
+                )
             except ImportError:
                 self._logger.info(
                     "Specified project '%s' not found, attempting install" % (
@@ -461,7 +465,7 @@ class Recipe(object):
                 requirements, ws = egg.working_set([ self.options['project'] ])
                 project = dotted_import(
                     self.options['project'],
-                    ws
+                    [d.location for d in ws]
                 )
             self.options.setdefault(
                 'urlconf',
@@ -486,7 +490,7 @@ class Recipe(object):
             )
         try:
             requirements, ws = self.egg.working_set(self.eggs)
-            mod = dotted_import(mod, ws)
+            mod = dotted_import(mod, [d.location for d in ws])
         except ImportError:
             raise zc.buildout.UserError(
                 "Error in '%s': media_origin is '%s' "
