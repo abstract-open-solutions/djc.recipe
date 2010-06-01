@@ -1,3 +1,10 @@
+0.3.2 (2010-06-01)
+==================
+
+- Fixed WSGI support (uwsgi, custom loggers) [Simone Deponti]
+
+- Fixed import bugs [Simone Deponti]
+
 0.3.1 (2010-05-19)
 ==================
 
