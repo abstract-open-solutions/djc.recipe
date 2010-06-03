@@ -150,10 +150,12 @@ class Recipe(object):
         self.options.setdefault('site-domain', '')
         self.options.setdefault('site-name', '')
         
-        self.options.setdefault('media-directory', 'static')
+        self.options.setdefault('static-directory', 'static')
+        self.options.setdefault('static-url', 'static')
+        self.options.setdefault('media-directory', 'media')
         self.options.setdefault('media-url', 'media')
         self.options.setdefault('admin-media', 'admin_media')
-        for option in ('media-url', 'admin-media'):
+        for option in ('static-url', 'media-url', 'admin-media'):
             self.options[option] = self.options[option].strip('/')
         
         self.options.setdefault('database-engine', 'sqlite3')
@@ -516,18 +518,19 @@ class Recipe(object):
         else:
             copytree(orig_directory, destination, self._logger)
 
-    def create_static(self):
+    def create_static(self, prefix):
         media_directory = os.path.join(
             self.buildout['buildout']['directory'],
-            self.options['media-directory']
+            self.options['%s-directory' % prefix]
         )
-        if 'media-origin' in self.options:
+        origin_option = '%s-origin' % prefix
+        if origin_option in self.options:
             if not os.path.isdir(media_directory):
                 self._logger.info(
                     "Making media directory '%s'" % media_directory
                 )
                 os.makedirs(media_directory)
-            for origin in self.options['media-origin'].split():
+            for origin in self.options[origin_option].split():
                 self.copy_origin(origin, media_directory)
         else:
             if not os.path.isdir(media_directory):
@@ -563,7 +566,8 @@ class Recipe(object):
         self.install_project()
         files = (
             self.create_project() + 
-            self.create_static() + 
+            self.create_static('static') + 
+            self.create_static('media') + 
             self.create_script()
         )
         if self._template_namespace['boolify'](self.options.get('wsgi', 'false')):

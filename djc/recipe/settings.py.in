@@ -38,6 +38,10 @@ TIME_ZONE = '{{timezone}}'
 
 LANGUAGE_CODE = '{{language_code}}'
 
+STATIC_ROOT = '{{absolute_path(static_directory)}}'
+
+STATIC_URL = '/{{static_url}}/'
+
 MEDIA_ROOT = '{{absolute_path(media_directory)}}'
 
 MEDIA_URL = '/{{media_url}}/'

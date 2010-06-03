@@ -20,12 +20,16 @@ templates
     Identifies the templates directory. If omitted, the directory named
     ``templates`` located in the module given as ``project`` is used.
 
-media-directory
+static-directory
     Identifies the folder into which static content (images, CSS and
     Javascripts) will go. Relatives path are considered relative to the
     buildout directory. The directory will be created if not present, and
     nothing will be done if it already exists. If omitted, defaults to
     ``static``.
+
+media-directory
+    Identifies the folder into which uploaded files will go. If omitted,
+    defaults to ``media``.
 
 settings-template
     If specified, the given template is used to generate the ``settings.py``
@@ -36,9 +40,14 @@ settings-template-extension
     If specified, the given template is appended to the template specified by
     ``settings template`` or to the default one.
 
-media-origin
+static-origin
     If specified, defines directories from which to copy the static files that
-    have to go in ``media-directory``: see `Media origin`_ for more details.
+    have to go in ``static-directory``: see `Static origin`_ for more details.
+
+media-origin
+    If specified, defines directories from which to copy the data files that
+    have to go in ``media-directory``: see ``static-origin`` option for
+    details.
 
 base-settings
     A settings module (only absolute imports) that is extended by the current
@@ -290,6 +299,7 @@ script and a ``parts/django`` part ::
     -  buildout.cfg
     d  develop-eggs
     d  eggs
+    d  media
     d  packages
     d  parts
     d  src
@@ -323,7 +333,11 @@ Let's look at this first ::
     <BLANKLINE>
     LANGUAGE_CODE = 'en-us'
     <BLANKLINE>
-    MEDIA_ROOT = '.../static'
+    STATIC_ROOT = '.../static'
+    <BLANKLINE>
+    STATIC_URL = '/static/'
+    <BLANKLINE>
+    MEDIA_ROOT = '.../media'
     <BLANKLINE>
     MEDIA_URL = '/media/'
     <BLANKLINE>
@@ -442,7 +456,11 @@ file ::
     <BLANKLINE>
     LANGUAGE_CODE = 'en-us'
     <BLANKLINE>
-    MEDIA_ROOT = '.../static'
+    STATIC_ROOT = '.../static'
+    <BLANKLINE>
+    STATIC_URL = '/static/'
+    <BLANKLINE>
+    MEDIA_ROOT = '.../media'
     <BLANKLINE>
     MEDIA_URL = '/media/'
     <BLANKLINE>
@@ -541,8 +559,8 @@ file ::
 
 As you can see, the builtin template has been totally discarded.
 
-Media origin
-============
+Static origin
+=============
 
 Static files are generally not served through Django_, but instead the
 front-end web server takes care to serve them by exposing a directory on the
@@ -558,15 +576,18 @@ to distribute them alongside the code.
    proper option is passed to ``easy_install``
 
 The relevant resources can be included in the distributed package and use of
-the ``media-origin`` option will allow them to be copied into the
-``media-directory`` folder (see Options_).
+the ``static-origin`` option will allow them to be copied into the
+``static-directory`` folder (see Options_).
 
-``media-origin`` can contain a list of static file sources, and each item of
+A similar feature is present for media files (e.g. image uploads) as well
+(option ``media-origin``, which ends up into ``media-directory``).
+
+``static-origin`` can contain a list of static file sources, and each item of
 the list can be either in the form ``package:directory`` or
 ``package:directory:destination``; ``package`` being the full dotted name of
 the importable module, ``directory`` the path to the directory inside the
 module containing static data, and ``destination`` an optional subdirectory
-inside ``media-directory`` where to copy the files.
+inside ``static-directory`` where to copy the files.
 
 Let's then begin from the first, simple case, with a single source of static
 data.
@@ -595,8 +616,8 @@ Let's create a buildout config and run it ::
     ... [django]
     ... recipe = djc.recipe
     ... project = dummydjangoprj
-    ... media-directory = static
-    ... media-origin = dummydjangoapp1:static
+    ... static-directory = static
+    ... static-origin = dummydjangoapp1:static
     ... """)
     >>> rmdir('static')
     >>> print system(buildout)
@@ -655,8 +676,8 @@ So if we have this buildout ::
     ... [django]
     ... recipe = djc.recipe
     ... project = dummydjangoprj
-    ... media-directory = static
-    ... media-origin =
+    ... static-directory = static
+    ... static-origin =
     ...     dummydjangoapp1:static
     ...     dummydjangoapp2:static
     ... """)
@@ -706,13 +727,13 @@ buildout written like this ::
     ... [django]
     ... recipe = djc.recipe
     ... project = dummydjangoprj
-    ... media-directory = static
-    ... media-origin =
+    ... static-directory = static
+    ... static-origin =
     ...     dummydjangoapp1:static:app1
     ...     dummydjangoapp2:static:app2
     ... """)
 
-It is to be noticed that the ``media-origin`` values have now three elements,
+It is to be noticed that the ``static-origin`` values have now three elements,
 the latter being the destination directory, which is defined as a subdirectory
 of ``static``: in this case, both apps live in their subdirectory and no clash
 happens ::
@@ -777,7 +798,7 @@ And launch the buildout: ::
     Installing django.
     django: Specified project 'dummydjangoprj' not found, attempting install
     django: Generating settings in ...
-    django: Making empty media directory ...
+    ...
     django: Creating script at .../bin/django
     Generated script '.../bin/django'.
     django: Creating script at .../parts/django/djc_recipe_django/app.py
@@ -838,7 +859,7 @@ Launch it ::
     Installing django.
     django: Specified project 'dummydjangoprj' not found, attempting install
     django: Generating settings in ...
-    django: Making empty media directory ...
+    ...
     django: Creating script at .../bin/django
     Generated script '.../bin/django'.
     django: Creating script at .../parts/django/djc_recipe_django/app.py
