@@ -191,6 +191,10 @@ template-loaders
 debug
     If ``true``, activates debug mode. Defaults to ``false``
 
+internal-ips
+    The IPs that are allowed to see full stack traces when in debug. Defaults
+    to ``127.0.0.1``
+
 site-id
     The Django site id. Defaults to unset.
 

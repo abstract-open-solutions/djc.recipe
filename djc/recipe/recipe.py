@@ -191,6 +191,7 @@ class Recipe(object):
         self.options.setdefault('authentication-backends', '')
 
         self.options.setdefault('debug', 'false')
+        self.options.setdefault('internal-ips', '127.0.0.1')
 
         self.options.setdefault('fixture-dirs', '')
 
