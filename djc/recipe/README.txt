@@ -344,25 +344,9 @@ Let's look at this first ::
     ADMIN_MEDIA_PREFIX = '/admin_media/'
     <BLANKLINE>
     SECRET_KEY = '...'
-    MIDDLEWARE_CLASSES = (
-        'django.middleware.common.CommonMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.middleware.doc.XViewMiddleware',
-    )
     <BLANKLINE>
     ROOT_URLCONF = 'dummydjangoprj.urls'
-    INSTALLED_APPS = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.admin',
-    )
     <BLANKLINE>
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.filesystem.load_template_source',
-        'django.template.loaders.app_directories.load_template_source',
-    )
     <BLANKLINE>
     TEMPLATE_DIRS = (
         '.../dummydjangoprj/templates',
@@ -467,25 +451,9 @@ file ::
     ADMIN_MEDIA_PREFIX = '/admin_media/'
     <BLANKLINE>
     SECRET_KEY = '...'
-    MIDDLEWARE_CLASSES = (
-        'django.middleware.common.CommonMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.middleware.doc.XViewMiddleware',
-    )
     <BLANKLINE>
     ROOT_URLCONF = 'dummydjangoprj.urls'
-    INSTALLED_APPS = (
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.admin',
-    )
     <BLANKLINE>
-    TEMPLATE_LOADERS = (
-        'django.template.loaders.filesystem.load_template_source',
-        'django.template.loaders.app_directories.load_template_source',
-    )
     <BLANKLINE>
     TEMPLATE_DIRS = (
         '.../dummydjangoprj/templates',

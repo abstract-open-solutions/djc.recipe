@@ -184,33 +184,9 @@ class Recipe(object):
 
         self.options.setdefault('base-settings', '')
 
-        _middleware_default = '''
-            django.middleware.common.CommonMiddleware
-            django.contrib.sessions.middleware.SessionMiddleware
-            django.contrib.auth.middleware.AuthenticationMiddleware
-            django.middleware.doc.XViewMiddleware
-        '''
-
-        _apps_default = '''
-            django.contrib.auth
-            django.contrib.contenttypes
-            django.contrib.sessions
-            django.contrib.admin
-        '''
-
-        _template_loaders_default = '''
-            django.template.loaders.filesystem.load_template_source
-            django.template.loaders.app_directories.load_template_source
-        '''
-
-        if self.options['base-settings']:
-            _middleware_default = ''
-            _apps_default = ''
-            _template_loaders_default = ''
-
-        self.options.setdefault('middleware', _middleware_default)
-        self.options.setdefault('apps', _apps_default)
-        self.options.setdefault('template-loaders', _template_loaders_default)
+        self.options.setdefault('middleware', '')
+        self.options.setdefault('apps', '')
+        self.options.setdefault('template-loaders', '')
         self.options.setdefault('template-context-processors', '')
         self.options.setdefault('authentication-backends', '')
 
