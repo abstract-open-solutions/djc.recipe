@@ -28,6 +28,11 @@ sys.path[0:0] = [
 import %(module_name)s
 
 application = %(module_name)s.%(attrs)s(%(arguments)s)
+
+def app_factory(global_config, **local_config):
+    """This function wraps our simple WSGI app so it
+    can be used with paste.deploy"""
+    return application
 '''
 
 
