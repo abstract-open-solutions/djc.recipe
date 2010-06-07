@@ -1,8 +1,14 @@
+0.5.1 (2010-06-07)
+==================
+
+- Made the wsgi module more paster-compatible
+
+
 0.5 (2010-06-03)
 ================
 
 .. note:: This release is potentially backwards-incompatible: ``media-url`` and
-          ``media-directory`` are not named ``static-url`` and
+          ``media-directory`` are now named ``static-url`` and
           ``static-directory`` respectively.
 
 - Fixed MEDIA_URL mess [Simone Deponti]
