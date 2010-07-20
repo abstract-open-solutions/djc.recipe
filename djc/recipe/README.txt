@@ -171,7 +171,11 @@ timezone
 
 language-code
     The language code: defaults to ``en-us``
-    
+
+server-mail
+    The email address from which site-generate mails come from. Defaults to
+    ``root@localhost``
+
 admins
     The list of site admins, in *RFC822* form. Defaults to
     ``John Smith <root@localhost>``
@@ -211,11 +215,18 @@ languages
     A list of supported languages in the form ``code Fullname``, for example
     ``en-us English (US)``. Defaults to unset.
 
+mail-backend
+    The mail backend to use. Defaults to
+    ``django.core.mail.backends.smtp.EmailBackend``.
+
+mail-filepath
+    The directory to use if the file mail backend is used [#]_.
+
 smtp-host
-    The SMTP host to use when sending mail. Defaults to ``localhost``.
+    The SMTP host to use when sending mail. Defaults to unset.
 
 smtp-port
-    The SMTP server port. Defaults to 25.
+    The SMTP server port. Defaults to unset.
 
 smtp-user
     The username to use to connect to the SMTP server. Defaults to unset.
@@ -349,6 +360,7 @@ Let's look at this first ::
     >>> ls('parts', 'django')
     -  settings.py
     >>> cat('parts', 'django', 'settings.py')
+    SERVER_EMAIL = 'root@localhost'
     ADMINS = (
     <BLANKLINE>
         ('John Smith', 'root@localhost'),
@@ -381,8 +393,7 @@ Let's look at this first ::
         '.../dummydjangoprj/templates',
     )
     <BLANKLINE>
-    EMAIL_HOST = 'localhost'
-    EMAIL_PORT = 25
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_USE_TLS = False
     <BLANKLINE>
     CACHE_BACKEND = 'locmem:///'
@@ -451,6 +462,7 @@ file ::
     Generated script ...
     <BLANKLINE>
     >>> cat('parts', 'django', 'settings.py')
+    SERVER_EMAIL = 'root@localhost'
     ADMINS = (
     <BLANKLINE>
         ('John Smith', 'root@localhost'),
@@ -483,8 +495,7 @@ file ::
         '.../dummydjangoprj/templates',
     )
     <BLANKLINE>
-    EMAIL_HOST = 'localhost'
-    EMAIL_PORT = 25
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_USE_TLS = False
     <BLANKLINE>
     CACHE_BACKEND = 'locmem:///'
@@ -894,6 +905,9 @@ be noted that all relative paths are intended as relative to the buildout root.
 .. [#] In all truth, it tries to read it from ``.secret.txt``: that failing the
        secret code is generated and written to said file to be used
        subsequently.
+
+.. [#] For further information, refer to Django's docs at
+       http://docs.djangoproject.com/en/1.2/ref/settings/#email-file-path
 
 .. [#] The small module is needed because ``uwsgi`` will refuse to load a rogue
        script, but will load a module (hence, with some ``PYTHONPATH`` magic,

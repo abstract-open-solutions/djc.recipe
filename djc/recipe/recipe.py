@@ -224,8 +224,6 @@ class Recipe(object):
         self.options.setdefault('database-host', '')
         self.options.setdefault('database-port', '')
 
-        self.options.setdefault('smtp-host', 'localhost')
-        self.options.setdefault('smtp-port', '25')
         self.options.setdefault(
             'database',
             'django.db.backends.sqlite3:///%s' %  os.path.join(
@@ -239,6 +237,9 @@ class Recipe(object):
             'mail-backend',
             'django.core.mail.backends.smtp.EmailBackend'
         )
+        self.options.setdefault('mail-filepath', '')
+        self.options.setdefault('smtp-host', '')
+        self.options.setdefault('smtp-port', '')
         self.options.setdefault('smtp-user', '')
         self.options.setdefault('smtp-password', '')
         self.options.setdefault('smtp-tls', 'false')
@@ -251,6 +252,7 @@ class Recipe(object):
         self.options.setdefault('language-code', 'en-us')
         self.options.setdefault('languages', '')
 
+        self.options.setdefault('server-email', "root@localhost")
         self.options.setdefault('admins', "John Smith <root@localhost>")
         self.options.setdefault('managers', 'ADMINS')
 
