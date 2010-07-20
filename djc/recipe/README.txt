@@ -143,15 +143,14 @@ optional, as sensible defaults will be provided if omitted.
 database
     The url of the default Django database, in the form
     ``<backend>://(<user>:<password>@)(<host>)(:<port>)/<name>((<options>))``.
-    Parenthesized values are to be considered as optional.
-    It is to be noted that the options are expected to be enclosed within
-    parentesis (``(``), separated by comma and in the form ``<name>=<value>``,
-    and that ``user``, ``password``, ``name`` and option names and values must
-    be form-urlencoded.
+    Parenthesized values are to be considered as optional.  It is to be noted
+    that the options are expected to be enclosed within parentesis (``(``),
+    separated by comma and in the form ``<name>=<value>``, and that ``user``,
+    ``password``, ``name`` and option names and values must be form-urlencoded.
     An example url might be:
     ``django.db.backends.mysql://usr:pwd@localhost:3306/mydb(opt1=val1,opt2=val2)``
-    where ``usr``,``pwd``,``mydb`` etc should be replaced by your configuration
-    values.
+    where ``usr``, ``pwd``, ``mydb`` etc should be replaced by your
+    configuration values.
     Defaults to
     ``django.db.backends.sqlite3:///${buildout:directory}/storage.db``
 
