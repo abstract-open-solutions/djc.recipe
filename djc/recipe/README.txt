@@ -51,10 +51,11 @@ media-origin
 
 base-settings
     A settings module (only absolute imports) that is extended by the current
-    settings.
+    settings, for example ``my.module.settings``.
     If specified, the defaults for ``apps``, ``middleware`` and
     ``template-loaders`` becomes an empty string (resulting into them not being
     written at all).
+    It is unset by default.
 
 wsgi
     Defaults to ``false``. If set to ``true`` (or ``on`` or ``1``) creates a
@@ -79,7 +80,7 @@ extra-paths
 pth-files
     A number of pth-files from which to load additional python modulesthat
     should be present in the buildout.
-    
+
 
 Templating
 ==========
@@ -138,7 +139,7 @@ optional, as sensible defaults will be provided if omitted.
 
 media-url
     The static content prefix path. Defaults to ``media``
-    
+
 admin-media
     The admin only static content prefix path. Defaults to ``admin_media``
     
@@ -165,29 +166,29 @@ database-port
 
 timezone
     The timezone: defaults to ``America/Chicago``
-    
+
 language-code
     The language code: defaults to ``en-us``
     
 admins
     The list of site admins, in *RFC822* form. Defaults to
     ``John Smith <root@localhost>``
-    
+
 managers
     The list of managers: same as for *admins*. Defaults to copy the value of
     *admins*
-    
+
 middleware
     The list of middleware classes to load. If an empty string, the value is
     not written at all.
-    
+
 apps
     The list of apps to load. If empty, the value is not written at all.
-    
+
 template-loaders
     The list of template loaders to use. If empty, the value is not written at
     all.
-    
+
 debug
     If ``true``, activates debug mode. Defaults to ``false``
 
@@ -216,18 +217,18 @@ smtp-port
 
 smtp-user
     The username to use to connect to the SMTP server. Defaults to unset.
-    
+
 smtp-password
     The password to use to connect to the SMTP server. This is not valid if
     ``smtp-user`` is not set aswell. Defaults to unset.
-    
+
 smtp-tls
     Whether TLS should be used when connecting to the SMTP server (boolean
     option). Defaults to ``false``.
 
 site-domain
     The site domain. Defaults to unset.
-    
+
 site-name
     The site title. Defaults to unset.
 
@@ -272,7 +273,7 @@ That cleared, we create the most simple buildout conceivable using this recipe :
 
 And run it ::
 
-    >>> print "start\n", system(buildout) 
+    >>> print "start\n", system(buildout)
     start
     ...
     Installing django.
@@ -764,7 +765,7 @@ recipe to ``true``: ::
 
 And launch the buildout: ::
 
-    >>> print "start\n", system(buildout) 
+    >>> print "start\n", system(buildout)
     start
     ...
     Installing django.
@@ -796,6 +797,11 @@ a python module containing an ``app.py`` file, which can be loaded by
     import djc.recipe.wsgi
     <BLANKLINE>
     application = djc.recipe.wsgi.main('.../parts/django/settings.py')
+    <BLANKLINE>
+    def app_factory(global_config, **local_config):
+        """This function wraps our simple WSGI app so it
+        can be used with paste.deploy"""
+        return application
 
 
 This will take care to inject all the needed paths into ``sys.path``, so no
@@ -825,7 +831,7 @@ Let's write the buildout ::
 
 Launch it ::
 
-    >>> print "start\n", system(buildout) 
+    >>> print "start\n", system(buildout)
     start
     ...
     Installing django.
@@ -852,6 +858,12 @@ And check what changes ::
     import djc.recipe.wsgi
     <BLANKLINE>
     application = djc.recipe.wsgi.main(..., logfile = '.../wsgi.log')
+    <BLANKLINE>
+    def app_factory(global_config, **local_config):
+        """This function wraps our simple WSGI app so it
+        can be used with paste.deploy"""
+        return application
+
 
 As you can see, the log file parameter is passed to the application: it is to
 be noted that all relative paths are intended as relative to the buildout root.
