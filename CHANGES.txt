@@ -1,3 +1,14 @@
+0.6 (2010-07-20)
+================
+
+- Added new mail settings, restructured defaults. [Simone Deponti]
+
+- Added support for multiple databases and new-style database settings.
+  [Simone Deponti]
+
+- Fixed bugs in the tests and documentation. [Simone Deponti]
+
+
 0.5.1 (2010-06-07)
 ==================
 

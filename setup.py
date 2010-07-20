@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-version = '0.5.1'
+version = '0.6'
 
 long_description = (
     read('README.txt')
@@ -18,14 +18,14 @@ long_description = (
     + '\n' +
     read('djc', 'recipe', 'README.txt')
     + '\n' +
-    'Contributors\n' 
+    'Contributors\n'
     '************\n'
     + '\n' +
     read('CONTRIBUTORS.txt')
     + '\n' +
     'Change history\n'
     '**************\n'
-    + '\n' + 
+    + '\n' +
     read('CHANGES.txt')
     )
 entry_point = 'djc.recipe.recipe:Recipe'
