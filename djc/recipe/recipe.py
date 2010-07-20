@@ -9,7 +9,7 @@ mere templating matter.
 The settings file is saved in ``parts/name/settings.py``.
 """
 
-import os, re, logging, random, sys, pprint
+import os, re, logging, random, sys, pprint, urllib
 import zc.recipe.egg
 from tempita import Template
 
@@ -135,6 +135,60 @@ def normalize_keys(mapping):
         yield (k.replace('-', '_'), v)
 
 
+dburl_regex = re.compile(
+    r"(?P<ENGINE>[a-zA-Z0-9_.]+)://(?:"
+    r"(?P<USER>[a-zA-Z0-9_./+\-]+):"
+    r"(?P<PASSWORD>[a-zA-Z0-9_./+\-]+)@)?"
+    r"(?P<HOST>[a-zA-Z0-9.]+)?"
+    r"(?::(?P<PORT>[0-9]+))?/"
+    r"(?P<NAME>[a-zA-Z0-9_./+\-]+)"
+    r"(?:\((?P<OPTIONS>[a-zA-Z0-9_./=,+\-]+)\))?"
+)
+
+
+def split_dburl(url):
+    global dburl_regex
+
+    m = dburl_regex.match(url)
+    if m is None:
+        raise ValueError(
+            "The database url '%s' is incorrect" % url
+        )
+    result = m.groupdict()
+    for key in result.keys():
+        if result[key] is None:
+            del result[key]
+    for key in ['USER', 'PASSWORD', 'NAME']:
+        if key in result:
+            result[key] = urllib.unquote_plus(result[key])
+    if 'OPTIONS' in result:
+        options = [ o.strip() for o in result['OPTIONS'].split(',') ]
+        result['OPTIONS'] = {}
+        for option in options:
+            try:
+                name, value = option.split('=')
+            except ValueError:
+                raise ValueError(
+                    ("The database url '%s' is incorrect, "
+                     "we cannot split the option '%s'") % (
+                        url, option
+                    )
+                )
+            result['OPTIONS'][urllib.unquote_plus(name)] = urllib.unquote_plus(
+                value
+            )
+    return result
+
+
+def listify(data):
+    lines = []
+    for raw_line in data.splitlines():
+        line = raw_line.strip()
+        if line != '':
+            lines.append(line)
+    return lines
+
+
 class Recipe(object):
     """A Django buildout recipe
     """
@@ -154,7 +208,7 @@ class Recipe(object):
         self.options.setdefault('site-id', '')
         self.options.setdefault('site-domain', '')
         self.options.setdefault('site-name', '')
-        
+
         self.options.setdefault('static-directory', 'static')
         self.options.setdefault('static-url', 'static')
         self.options.setdefault('media-directory', 'media')
@@ -162,9 +216,9 @@ class Recipe(object):
         self.options.setdefault('admin-media', 'admin_media')
         for option in ('static-url', 'media-url', 'admin-media'):
             self.options[option] = self.options[option].strip('/')
-        
-        self.options.setdefault('database-engine', 'sqlite3')
-        self.options.setdefault('database-name', 'storage.db')
+
+        self.options.setdefault('database-engine', '')
+        self.options.setdefault('database-name', '')
         self.options.setdefault('database-user', '')
         self.options.setdefault('database-password', '')
         self.options.setdefault('database-host', '')
@@ -172,6 +226,19 @@ class Recipe(object):
 
         self.options.setdefault('smtp-host', 'localhost')
         self.options.setdefault('smtp-port', '25')
+        self.options.setdefault(
+            'database',
+            'django.db.backends.sqlite3:///%s' %  os.path.join(
+                self.buildout['buildout']['directory'],
+                'storage.db'
+            )
+        )
+        self.options.setdefault('additional-databases', '')
+
+        self.options.setdefault(
+            'mail-backend',
+            'django.core.mail.backends.smtp.EmailBackend'
+        )
         self.options.setdefault('smtp-user', '')
         self.options.setdefault('smtp-password', '')
         self.options.setdefault('smtp-tls', 'false')
@@ -179,7 +246,7 @@ class Recipe(object):
         self.options.setdefault('cache-backend', 'locmem:///')
         self.options.setdefault('cache-timeout', '60*5')
         self.options.setdefault('cache-prefix', 'Z')
-        
+
         self.options.setdefault('timezone', 'America/Chicago')
         self.options.setdefault('language-code', 'en-us')
         self.options.setdefault('languages', '')
@@ -219,14 +286,6 @@ class Recipe(object):
                 self.buildout['buildout']['directory'], url
             )
 
-        def t_listify(data):
-            lines = []
-            for raw_line in data.splitlines():
-                line = raw_line.strip()
-                if line != '':
-                    lines.append(line)
-            return lines
-
         def t_rfc822tuplize(data):
             m = re.match('(.+)\s+<(.+)>', data)
             if m is None:
@@ -241,14 +300,15 @@ class Recipe(object):
 
         def t_join(data, infix, prefix="", suffix=""):
             return prefix+infix.join(data)+suffix
-        
+
         # here go functions you'd like to have available in templates
         self._template_namespace = {
             'absolute_path': t_absolute_path,
-            'listify': t_listify,
+            'listify': listify,
             'rfc822tuplize': t_rfc822tuplize,
             'boolify': t_boolify,
-            'join': t_join
+            'join': t_join,
+            'dump': repr
         }
 
     @memoized_property
@@ -299,6 +359,31 @@ class Recipe(object):
             )
         return data
 
+    def fix_databases(self, variables):
+        databases = {}
+        database = variables.pop('database').strip()
+        if database != '':
+            databases['default'] = split_dburl(database)
+        for key in [ 'database_engine', 'database_name', 'database_user',
+                          'database_password', 'database_host',
+                          'database_port' ]:
+            value = variables.pop(key).strip()
+            if value != '':
+                databases['default'][key[len('database_'):].upper()] = value
+        additional_databases = listify(variables.pop('additional_databases'))
+        for additional_database in additional_databases:
+            try:
+                name, url = additional_database.split('=', 1)
+            except ValueError:
+                raise ValueError(
+                    (
+                        "The databases entry '%s' is incorrect, "
+                        "it should be in the form 'name=url'"
+                    ) % additional_database
+                )
+            databases[name] = split_dburl(url)
+        variables['databases'] = databases
+
     @memoized_property
     def settings_py(self):
         if 'settings-template' in self.options:
@@ -331,6 +416,7 @@ class Recipe(object):
             stream.close()
 
         variables = dict(normalize_keys(self.options))
+        self.fix_databases(variables)
         variables.update({ 'name': self.name, 'secret': self.secret })
         self._logger.debug(
             "Variable computation terminated:\n%s" % pprint.pformat(variables)
@@ -544,12 +630,12 @@ class Recipe(object):
     def install(self):
         """Installs the part
         """
-        
+
         self.install_project()
         files = (
-            self.create_project() + 
-            self.create_static('static') + 
-            self.create_static('media') + 
+            self.create_project() +
+            self.create_static('static') +
+            self.create_static('media') +
             self.create_script()
         )
         if self._template_namespace['boolify'](self.options.get('wsgi', 'false')):

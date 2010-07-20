@@ -27,12 +27,7 @@ MANAGERS = (
 SITE_ID = {{site_id}}
 {{endif}}
 
-DATABASE_ENGINE = '{{database_engine}}'
-DATABASE_NAME = '{{database_name}}'
-DATABASE_USER = '{{database_user}}'
-DATABASE_PASSWORD = '{{database_password}}'
-DATABASE_HOST = '{{database_host}}'
-DATABASE_PORT = '{{database_port}}'
+DATABASES = {{dump(databases)}}
 
 TIME_ZONE = '{{timezone}}'
 

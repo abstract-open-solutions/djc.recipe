@@ -130,6 +130,9 @@ join
     parameter, the *infix* as second and two optional parameters *prefix*
     (added just one to the beginning) and *suffix* (added just one to the end)
 
+dump
+    An alias of ``repr``.
+
 
 Default template options
 ------------------------
@@ -137,32 +140,31 @@ Default template options
 The default template accepts a number of options. They are to be considered all
 optional, as sensible defaults will be provided if omitted.
 
+database
+    The url of the default Django database, in the form
+    ``<backend>://(<user>:<password>@)(<host>)(:<port>)/<name>((<options>))``.
+    Parenthesized values are to be considered as optional.
+    It is to be noted that the options are expected to be enclosed within
+    parentesis (``(``), separated by comma and in the form ``<name>=<value>``,
+    and that ``user``, ``password``, ``name`` and option names and values must
+    be form-urlencoded.
+    An example url might be:
+    ``django.db.backends.mysql://usr:pwd@localhost:3306/mydb(opt1=val1,opt2=val2)``
+    where ``usr``,``pwd``,``mydb`` etc should be replaced by your configuration
+    values.
+    Defaults to
+    ``django.db.backends.sqlite3:///${buildout:directory}/storage.db``
+
+additional-databases
+    A list of databases in the form ``name=url``, each on one line, where
+    ``name`` is the Django-internal database name and ``url`` is the database
+    url in the same form as that provided by ``database``
+
 media-url
     The static content prefix path. Defaults to ``media``
 
 admin-media
     The admin only static content prefix path. Defaults to ``admin_media``
-    
-database-engine
-    The database engine to use: defaults to ``sqlite``
-    
-database-name
-    The name of the database to use: defaults to ``storage.db``
-    
-database-user
-    The username to use when connecting to the database server. Defaults to
-    empty string.
-
-database-password
-    The password to use when connecting to the database server. Defaults to
-    empty string.
-
-database-host
-    The host on which the database server resides. Defaults to empty string.
-
-database-port
-    The port on which the database server accepts connections. Defaults to
-    empty string.
 
 timezone
     The timezone: defaults to ``America/Chicago``
@@ -237,12 +239,39 @@ cache-backend
 
 cache-timeout
     The cache timeout in seconds. Defaults to ``60*5``.
-    
+
 cache-prefix
     The cache prefix (prefixed at all cache IDs). Defaults to ``Z``.
 
 fixture-dirs
     The directories into which search for fixtures. Not set by default.
+
+Deprecated options
+------------------
+
+These options are still supported within templates, but they are pending
+deletion.
+
+database-engine
+    The database engine to use.
+
+database-name
+    The name of the database to use.
+
+database-user
+    The username to use when connecting to the database server. Defaults to
+    empty string.
+
+database-password
+    The password to use when connecting to the database server. Defaults to
+    empty string.
+
+database-host
+    The host on which the database server resides. Defaults to empty string.
+
+database-port
+    The port on which the database server accepts connections. Defaults to
+    empty string.
 
 
 Example usage
@@ -327,12 +356,7 @@ Let's look at this first ::
     MANAGERS = ADMINS
     <BLANKLINE>
     <BLANKLINE>
-    DATABASE_ENGINE = 'sqlite3'
-    DATABASE_NAME = 'storage.db'
-    DATABASE_USER = ''
-    DATABASE_PASSWORD = ''
-    DATABASE_HOST = ''
-    DATABASE_PORT = ''
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': '/sample-buildout/storage.db'}}
     <BLANKLINE>
     TIME_ZONE = 'America/Chicago'
     <BLANKLINE>
@@ -434,12 +458,7 @@ file ::
     MANAGERS = ADMINS
     <BLANKLINE>
     <BLANKLINE>
-    DATABASE_ENGINE = 'sqlite3'
-    DATABASE_NAME = 'storage.db'
-    DATABASE_USER = ''
-    DATABASE_PASSWORD = ''
-    DATABASE_HOST = ''
-    DATABASE_PORT = ''
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': '/sample-buildout/storage.db'}}
     <BLANKLINE>
     TIME_ZONE = 'America/Chicago'
     <BLANKLINE>
