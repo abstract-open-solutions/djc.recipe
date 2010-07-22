@@ -204,6 +204,7 @@ class Recipe(object):
             self.buildout['buildout']['parts-directory'], self.name
         )
         self.options.setdefault('extra-paths', '')
+        self.options.setdefault('coding', 'utf-8')
 
         self.options.setdefault('site-id', '')
         self.options.setdefault('site-domain', '')

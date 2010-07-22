@@ -65,6 +65,9 @@ wsgi
 wsgi-logfile
     If set, the log will be redirected here: defaults to not being set.
 
+coding
+    The encoding of the resulting settings file. Defaults to ``utf-8``.
+
 
 Advanced options
 ----------------
@@ -359,6 +362,7 @@ Let's look at this first ::
     >>> ls('parts', 'django')
     -  settings.py
     >>> cat('parts', 'django', 'settings.py')
+    # coding=utf-8
     SERVER_EMAIL = 'root@localhost'
     ADMINS = (
     <BLANKLINE>
@@ -461,6 +465,7 @@ file ::
     Generated script ...
     <BLANKLINE>
     >>> cat('parts', 'django', 'settings.py')
+    # coding=utf-8
     SERVER_EMAIL = 'root@localhost'
     ADMINS = (
     <BLANKLINE>

@@ -1,3 +1,9 @@
+0.6.1 (unreleased)
+==================
+
+- Fixed encoding bug. [Simone Deponti]
+
+
 0.6 (2010-07-20)
 ================
 

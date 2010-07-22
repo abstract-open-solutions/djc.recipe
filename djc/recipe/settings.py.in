@@ -1,3 +1,4 @@
+# coding={{coding}}
 {{if base_settings}}
 from {{base_settings}} import *
 {{endif}}
