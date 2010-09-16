@@ -196,9 +196,6 @@ class Recipe(object):
     def __init__(self, buildout, name, options):
         self.buildout, self.name, self.options = buildout, name, options
         self._logger = logging.getLogger(name)
-        self.egg = zc.recipe.egg.Egg(
-            self.buildout, self.options['recipe'], self.options
-        )
 
         self.options['location'] = os.path.join(
             self.buildout['buildout']['parts-directory'], self.name
@@ -275,6 +272,8 @@ class Recipe(object):
             self.eggs.extend(self.buildout['buildout']['eggs'].split())
         if 'eggs' in self.options:
             self.eggs.extend(self.options['eggs'].split())
+        if 'project' in self.options:
+            self.eggs.append(self.options['project'])
 
         if not ('urlconf' in self.options and 'templates' in self.options):
             if not 'project' in self.options:
@@ -313,6 +312,13 @@ class Recipe(object):
             'join': t_join,
             'dump': repr
         }
+
+    @memoized_property
+    def rws(self):
+        egg = zc.recipe.egg.Egg(
+            self.buildout, self.options['recipe'], self.options
+        )
+        return egg.working_set(self.eggs)
 
     @memoized_property
     def extra_paths(self):
@@ -436,7 +442,7 @@ class Recipe(object):
         return template.substitute(variables)
 
     def _create_script(self, name, path, module, attr, extra_attr = []):
-        requirements, ws = self.egg.working_set(self.eggs)
+        requirements, ws = self.rws
         self._logger.info(
             "Creating script at %s" % (os.path.join(path, name),)
         )
@@ -500,46 +506,11 @@ class Recipe(object):
 
     def install_project(self):
         if 'project' in self.options:
-            try:
-                requirements, ws = self.egg.working_set(self.eggs)
-                project = dotted_import(
-                    self.options['project'],
-                    [d.location for d in ws]
-                )
-            except ImportError:
-                self._logger.info(
-                    "Specified project '%s' not found, attempting install" % (
-                        self.options['project'],
-                    )
-                )
-                requirements, ws = self.egg.working_set(self.eggs)
-                buildout = self.buildout['buildout']
-                if 'versions' in buildout and buildout['versions'] in self.buildout:
-                    versions = self.buildout[buildout['versions']]
-                else:
-                    versions = None
-                zc.buildout.easy_install.install(
-                    [self.options['project']], buildout['eggs-directory'],
-                    links = buildout.get('find-links', '').split(),
-                    index = buildout.get('index'),
-                    path = [
-                        buildout['develop-eggs-directory'],
-                        buildout['eggs-directory']
-                    ],
-                    always_unzip=True,
-                    newest = self.buildout.newest,
-                    allow_hosts = self.buildout._allow_hosts,
-                    versions = versions,
-                    working_set = ws
-                )
-                egg = zc.recipe.egg.Egg(
-                    self.buildout, self.options['project'], self.options
-                )
-                requirements, ws = egg.working_set([ self.options['project'] ])
-                project = dotted_import(
-                    self.options['project'],
-                    [d.location for d in ws]
-                )
+            requirements, ws = self.rws
+            project = dotted_import(
+                self.options['project'],
+                [d.location for d in ws]
+            )
             self.options.setdefault(
                 'urlconf',
                 '%s.urls' % self.options['project']
@@ -562,7 +533,7 @@ class Recipe(object):
                 "'custom.module:directory'" % self.name
             )
         try:
-            requirements, ws = self.egg.working_set(self.eggs)
+            requirements, ws = self.rws
             mod = dotted_import(mod, [d.location for d in ws])
         except ImportError:
             raise zc.buildout.UserError(
