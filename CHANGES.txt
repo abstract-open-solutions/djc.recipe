@@ -1,6 +1,8 @@
 0.7 (unreleased)
 ================
 
+- Added ability to symlink the static origin [Simone Deponti]
+
 - Refactored working set computation to achieve better
   performances [Simone Deponti]
 

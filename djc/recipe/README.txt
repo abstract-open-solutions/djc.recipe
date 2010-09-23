@@ -44,6 +44,10 @@ static-origin
     If specified, defines directories from which to copy the static files that
     have to go in ``static-directory``: see `Static origin`_ for more details.
 
+link-static-origin
+    Boolean value, defaults to ``false``. If set, the files will be symlinked
+    instead of copied. Does work only on unix.
+
 media-origin
     If specified, defines directories from which to copy the data files that
     have to go in ``media-directory``: see ``static-origin`` option for

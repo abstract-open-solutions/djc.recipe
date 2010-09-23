@@ -51,7 +51,7 @@ def get_destination(fullpath, origin, destination):
     return os.path.join(*components)
 
 
-def copytree(origin, destination, logger):
+def copytree(origin, destination, logger, link = False):
     if not os.path.isdir(destination):
         logger.debug("Creating missing destination %s" % destination)
         os.makedirs(destination)
@@ -61,14 +61,17 @@ def copytree(origin, destination, logger):
             destination_path = get_destination(
                 origin_path, origin, destination
             )
-            logger.debug(
-                "Copying %s to %s" % (origin_path, destination_path)
-            )
-            origin_fp = open(origin_path, "rb")
-            destination_fp = open(destination_path, "wb")
-            destination_fp.write(origin_fp.read())
-            origin_fp.close()
-            destination_fp.close()
+            if link and hasattr(os, 'symlink'):
+                os.symlink(origin_path, destination_path)
+            else:
+                logger.debug(
+                    "Copying %s to %s" % (origin_path, destination_path)
+                )
+                origin_fp = open(origin_path, "rb")
+                destination_fp = open(destination_path, "wb")
+                destination_fp.write(origin_fp.read())
+                origin_fp.close()
+                destination_fp.close()
         for name in dirs:
             origin_path = os.path.join(root, name)
             destination_path = get_destination(
@@ -520,7 +523,7 @@ class Recipe(object):
                 os.path.join(os.path.dirname(project.__file__), 'templates')
             )
 
-    def copy_origin(self, origin, destination):
+    def copy_origin(self, origin, destination, link = False):
         self._logger.info(
             "Copying media from '%s' to '%s'" % (origin, destination)
         )
@@ -555,10 +558,11 @@ class Recipe(object):
             copytree(
                 orig_directory,
                 os.path.join(destination, components[2]),
-                self._logger
+                self._logger,
+                link
             )
         else:
-            copytree(orig_directory, destination, self._logger)
+            copytree(orig_directory, destination, self._logger, link)
 
     def create_static(self, prefix):
         media_directory = os.path.join(
@@ -566,14 +570,16 @@ class Recipe(object):
             self.options['%s-directory' % prefix]
         )
         origin_option = '%s-origin' % prefix
+        link_option = 'link-%s-origin' % prefix
         if origin_option in self.options:
             if not os.path.isdir(media_directory):
                 self._logger.info(
                     "Making media directory '%s'" % media_directory
                 )
                 os.makedirs(media_directory)
+            link = (self.options.get(link_option, 'false').lower() == 'true')
             for origin in self.options[origin_option].split():
-                self.copy_origin(origin, media_directory)
+                self.copy_origin(origin, media_directory, link)
         else:
             if not os.path.isdir(media_directory):
                 self._logger.info(
