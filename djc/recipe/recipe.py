@@ -62,6 +62,8 @@ def copytree(origin, destination, logger, link = False):
                 origin_path, origin, destination
             )
             if link and hasattr(os, 'symlink'):
+                if os.path.isfile(destination_path):
+                    os.remove(destination_path)
                 os.symlink(origin_path, destination_path)
             else:
                 logger.debug(

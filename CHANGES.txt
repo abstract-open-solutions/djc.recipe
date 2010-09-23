@@ -1,6 +1,7 @@
-0.8 (unreleased)
-================
+0.7.1 (2010-09-23)
+==================
 
+- Fixed multiple link bug [Simone Deponti]
 
 
 0.7 (2010-09-23)
