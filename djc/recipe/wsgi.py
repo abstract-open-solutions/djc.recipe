@@ -1,8 +1,8 @@
-import imp, sys
+import imp, sys, logging
 
 from django.core.management import setup_environ
 
-def main(settings_file, logfile=None):
+def main(settings_file, logfile=None, loglevel=None):
     try:
         imp.acquire_lock()
         mod = imp.load_source('_django_settings', settings_file)
@@ -17,26 +17,12 @@ def main(settings_file, logfile=None):
     setup_environ(mod, '_django_settings')
 
     if logfile:
-        import datetime
-        class logger(object):
-            def __init__(self, logfile):
-                self.logfile = logfile
-
-            def write(self, data):
-                self.log(data)
-
-            def writeline(self, data):
-                self.log(data)
-
-            def log(self, msg):
-                line = '%s - %s\n' % (
-                    datetime.datetime.now().strftime('%Y%m%d %H:%M:%S'), msg)
-                fp = open(self.logfile, 'a')
-                try:
-                    fp.write(line)
-                finally:
-                    fp.close()
-        sys.stdout = sys.stderr = logger(logfile)
+        kwargs = {
+            'filename': logfile
+        }
+        if loglevel and hasattr(logging, loglevel):
+            kwargs['level'] = getattr(logging, loglevel)
+        logging.basicConfig(**kwargs)
 
     from django.core.handlers.wsgi import WSGIHandler
 

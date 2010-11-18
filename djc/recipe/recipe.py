@@ -499,6 +499,10 @@ class Recipe(object):
                     self.options['wsgi-logfile']
                 )
             )
+            if 'wsgi-loglevel' in self.options:
+                extras.append(
+                    "loglevel = '%s'" % self.options['wsgi-loglevel'].upper()
+                )
         script = self._create_script(
             'app.py',
             module_path,

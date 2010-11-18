@@ -69,6 +69,11 @@ wsgi
 wsgi-logfile
     If set, the log will be redirected here: defaults to not being set.
 
+wsgi-loglevel
+    Sets the log level: it is only processed if ``wsgi-loglevel`` is also set.
+    The accepted values are: ``debug``, ``info``, ``warning``, ``error``,
+    ``critical``
+
 coding
     The encoding of the resulting settings file. Defaults to ``utf-8``.
 
