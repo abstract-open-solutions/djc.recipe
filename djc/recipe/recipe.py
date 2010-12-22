@@ -94,7 +94,6 @@ def dotted_import(module, paths):
     try:
         mod = __import__(module)
     except ImportError:
-        i = 1
         for i in xrange(1, len(components)):
             try:
                 mod = __import__(".".join(components[:-1*i]))
@@ -102,7 +101,6 @@ def dotted_import(module, paths):
                 pass
             else:
                 break
-        components = components[i:]
     if mod is None:
         raise ImportError("Could not import %s" % module)
     if module != mod.__name__:
