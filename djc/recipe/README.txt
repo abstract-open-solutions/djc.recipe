@@ -77,7 +77,6 @@ wsgi-loglevel
 coding
     The encoding of the resulting settings file. Defaults to ``utf-8``.
 
-
 Advanced options
 ----------------
 
@@ -93,6 +92,20 @@ pth-files
     A number of pth-files from which to load additional python modulesthat
     should be present in the buildout.
 
+environment-vars
+    Allows one to override OS environment vars by setting them
+    during ``manage.py`` run. One environment variable name and value per line, space separated.
+    Variable values can be hardcoded or buildout template mechanism can be used where you refer
+    to other variables set in buildout. 
+
+    Example::
+
+        environment-vars =
+                GOOGLE_APPENGINE_PROJECT_ROOT ${buildout:appengine-base-path}
+                TZ Europe/Helsinki
+
+    You might want to also check ``gocept.recipe.env`` buildout recipe if you wish to extend
+    existing environment variables, like ``PATH``.
 
 Templating
 ==========

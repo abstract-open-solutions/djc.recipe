@@ -270,6 +270,8 @@ class Recipe(object):
 
         self.options.setdefault('fixture-dirs', '')
 
+        self.options.setdefault('environment-vars', '')
+
         self.eggs = [ _egg_name ]
         if 'eggs' in self.buildout['buildout']:
             self.eggs.extend(self.buildout['buildout']['eggs'].split())
@@ -444,7 +446,8 @@ class Recipe(object):
         )
         return template.substitute(variables)
 
-    def _create_script(self, name, path, module, attr, extra_attr = []):
+    def _create_script(self, name, path, module, attr, extra_attr = [], initialization=""):
+        """ Create arbitary bootstrap script """
         requirements, ws = self.rws
         self._logger.info(
             "Creating script at %s" % (os.path.join(path, name),)
@@ -453,11 +456,14 @@ class Recipe(object):
             extras = ", " + ", ".join(extra_attr)
         else:
             extras = ''
+
+        # See http://svn.zope.org/zc.buildout/trunk/src/zc/buildout/easy_install.py?rev=105585&view=auto
         return zc.buildout.easy_install.scripts(
             [(name, module, attr)],
             ws, self.options['executable'],
             path,
             extra_paths = self.extra_paths,
+            initialization=initialization,
             arguments = "'%s'%s" % (
                 os.path.join(
                     self.options['location'],
@@ -468,11 +474,41 @@ class Recipe(object):
         )
 
     def create_script(self):
+        """ Generate bin/django script """
+
+        # Read environment-vars option and convert it contents to Python code
+        evars_data = self.options.get("environment-vars", "")
+
+        if evars_data != "":
+
+                # Build an os.environ builder which takes environment vars we have
+                # env_bootsrap contains a string stub which is inserted at the beginning of the script file
+                env_bootstrap = "\nimport os\n"
+
+                evars = evars_data.split("\n")
+                for var in evars:
+                        var = var.strip()
+
+                        if var == "":
+                                # Skip empty lines
+                                continue
+
+                        if not " " in var:
+                                raise RuntimeError("Bad djc.recipe environment-vars contents:" + evars_data)
+                        name, value = var.split(" ", 1) # split to key, remainder
+                        env_bootstrap += 'os.environ["%s"] = "%s"' % (name, value)
+        else:
+                # No environment options
+                env_bootstrap = ""                
+
+        import pdb ; pdb.set_trace()
+
         return self._create_script(
             self.options.get('control-script', self.name),
             self.buildout['buildout']['bin-directory'],
             'djc.recipe.manage',
-            'main'
+            'main',
+            initialization = env_bootstrap
         )
 
     def create_wsgi_script(self):
