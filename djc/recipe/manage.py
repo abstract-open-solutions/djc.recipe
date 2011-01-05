@@ -10,6 +10,10 @@ def main(settings_file):
         imp.release_lock()
         sys.stderr.write("Error loading the settings module '%s': %s"
                             % (settings_file, e))
+
+        import traceback
+        traceback.print_exc()
+
         return sys.exit(1)
     
     imp.release_lock()

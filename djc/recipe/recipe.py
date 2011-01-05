@@ -501,8 +501,6 @@ class Recipe(object):
                 # No environment options
                 env_bootstrap = ""                
 
-        import pdb ; pdb.set_trace()
-
         return self._create_script(
             self.options.get('control-script', self.name),
             self.buildout['buildout']['bin-directory'],
