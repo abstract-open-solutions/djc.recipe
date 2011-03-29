@@ -50,6 +50,7 @@ Links
 
 - Code repository: http://gitorious.org/djc-recipe/djc-recipe
 - Report bugs at http://open.abstract.it/it/progetti/rilasci-abstract/djc.recipe/issues
+- Discussions at https://groups.google.com/group/djcrecipe
 - Comments and questions at info@abstract.it
 
 .. _Django: http://www.djangoproject.com/
