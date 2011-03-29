@@ -31,6 +31,20 @@ up the ``settings.py`` file.
 Of course, real examples tend to be slightly more complex: see Options_,
 `Default template options`_ and `Example usage`_ for more details.
 
+Running tests
+*************
+
+The ``README.txt`` located within the package also acts as main doctest.
+
+To run the tests, check out the source, and then bootstrap and run the buildout::
+
+    $ python bootstrap.py
+    $ bin/buildout
+
+Then you can run the tests using
+
+    $ bin/test
+
 Links
 *****
 

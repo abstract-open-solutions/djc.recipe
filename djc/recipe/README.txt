@@ -376,6 +376,7 @@ script and a ``parts/django`` part ::
     -  buildout
     -  django
     >>> ls('parts')
+    d  buildout
     d  django
 
 Let's look at this first ::
@@ -650,7 +651,6 @@ Let's create a buildout config and run it ::
     >>> rmdir('static')
     >>> print system(buildout)
     Develop: '.../dummydjangoapp1'
-    ...
     Uninstalling django.
     Installing django.
     ...
@@ -719,7 +719,7 @@ A quick run and inspect confirms this: ::
     >>> rmdir('static')
     >>> print system(buildout)
     Develop: '.../dummydjangoapp1'
-    ...
+    Develop: '.../dummydjangoapp2'
     Uninstalling django.
     Installing django.
     ...
@@ -769,7 +769,7 @@ happens ::
     >>> rmdir('static')
     >>> print system(buildout)
     Develop: '.../dummydjangoapp1'
-    ...
+    Develop: '.../dummydjangoapp2'
     Uninstalling django.
     Installing django.
     ...
