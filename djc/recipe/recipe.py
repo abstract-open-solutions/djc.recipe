@@ -496,7 +496,7 @@ class Recipe(object):
                         if not " " in var:
                                 raise RuntimeError("Bad djc.recipe environment-vars contents:" + evars_data)
                         name, value = var.split(" ", 1) # split to key, remainder
-                        env_bootstrap += 'os.environ["%s"] = "%s"' % (name, value)
+                        env_bootstrap += 'os.environ["%s"] = "%s"\n' % (name, value)
         else:
                 # No environment options
                 env_bootstrap = ""                
