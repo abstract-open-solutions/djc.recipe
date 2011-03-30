@@ -41,7 +41,7 @@ To run the tests, check out the source, and then bootstrap and run the buildout:
     $ python bootstrap.py
     $ bin/buildout
 
-Then you can run the tests using
+Then you can run the tests using::
 
     $ bin/test
 
