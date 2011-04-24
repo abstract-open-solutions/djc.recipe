@@ -464,7 +464,7 @@ class Recipe(object):
             path,
             extra_paths = self.extra_paths,
             initialization=initialization,
-            arguments = "'%s'%s" % (
+            arguments = "r'%s'%s" % (
                 os.path.join(
                     self.options['location'],
                     _settings_name
@@ -496,7 +496,7 @@ class Recipe(object):
                         if not " " in var:
                                 raise RuntimeError("Bad djc.recipe environment-vars contents:" + evars_data)
                         name, value = var.split(" ", 1) # split to key, remainder
-                        env_bootstrap += 'os.environ["%s"] = "%s"\n' % (name, value)
+                        env_bootstrap += 'os.environ["%s"] = r"%s"\n' % (name, value)
         else:
                 # No environment options
                 env_bootstrap = ""                
