@@ -123,9 +123,9 @@ CACHE_BACKEND = '{{cache_backend}}'
 CACHE_TIMEOUT = {{cache_timeout}}
 CACHE_PREFIX = '{{cache_prefix}}'
 
-{{if boolify(debug)}}
-DEBUG = True
+DEBUG = {{boolify(debug)}}
 TEMPLATE_DEBUG = DEBUG
+{{if boolify(debug)}}
 INTERNAL_IPS = (
     {{join(listify(internal_ips),"',\n    '","'","',")}}
 )

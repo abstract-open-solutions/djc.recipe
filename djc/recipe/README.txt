@@ -424,6 +424,9 @@ Let's look at this first ::
     CACHE_BACKEND = 'locmem:///'
     CACHE_TIMEOUT = 60*5
     CACHE_PREFIX = 'Z'
+    <BLANKLINE>
+    DEBUG = False
+    TEMPLATE_DEBUG = DEBUG
 
 As you can see, this is pretty much the standard Django ``settings.py`` as
 created by Django's ``django-admin``. It has the peculiarity of not residing in
@@ -447,6 +450,85 @@ Let's have a look at the manage script ::
 
 As we can see, the ``main()`` function of the ``manage`` module is called,
 passing in the file with the settings as only argument.
+
+We can now try to set up an example development environment, passing
+``debug = true`` to it::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... debug = true
+    ... """)
+    >>> print "start\n", system(buildout)
+    start
+    ...
+    Installing django.
+    django: Generating settings in ...
+    django: Making empty media directory ...
+    django: Making empty media directory ...
+    django: Creating script at ...
+    Generated script ...
+    <BLANKLINE>
+
+And look at the generated settings::
+
+    >>> cat('parts', 'django', 'settings.py')
+    # coding=utf-8
+    SERVER_EMAIL = 'root@localhost'
+    ADMINS = (
+    <BLANKLINE>
+        ('John Smith', 'root@localhost'),
+    )
+    MANAGERS = ADMINS
+    <BLANKLINE>
+    <BLANKLINE>
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': '/sample-buildout/storage.db'}}
+    <BLANKLINE>
+    TIME_ZONE = 'America/Chicago'
+    <BLANKLINE>
+    LANGUAGE_CODE = 'en-us'
+    <BLANKLINE>
+    STATIC_ROOT = '.../static'
+    <BLANKLINE>
+    STATIC_URL = '/static/'
+    <BLANKLINE>
+    MEDIA_ROOT = '.../media'
+    <BLANKLINE>
+    MEDIA_URL = '/media/'
+    <BLANKLINE>
+    ADMIN_MEDIA_PREFIX = '/admin_media/'
+    <BLANKLINE>
+    SECRET_KEY = '...'
+    <BLANKLINE>
+    ROOT_URLCONF = 'dummydjangoprj.urls'
+    <BLANKLINE>
+    <BLANKLINE>
+    TEMPLATE_DIRS = (
+        '.../dummydjangoprj/templates',
+    )
+    <BLANKLINE>
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_USE_TLS = False
+    <BLANKLINE>
+    CACHE_BACKEND = 'locmem:///'
+    CACHE_TIMEOUT = 60*5
+    CACHE_PREFIX = 'Z'
+    <BLANKLINE>
+    DEBUG = True
+    TEMPLATE_DEBUG = DEBUG
+    <BLANKLINE>
+    INTERNAL_IPS = (
+        '127.0.0.1',
+    )
+
 
 Template overriding
 -------------------
@@ -527,6 +609,9 @@ file ::
     CACHE_BACKEND = 'locmem:///'
     CACHE_TIMEOUT = 60*5
     CACHE_PREFIX = 'Z'
+    <BLANKLINE>
+    DEBUG = False
+    TEMPLATE_DEBUG = DEBUG
     <BLANKLINE>
     <BLANKLINE>
     # Extension template template-extension.py.in
