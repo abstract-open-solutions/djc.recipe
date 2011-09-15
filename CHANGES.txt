@@ -1,3 +1,13 @@
+0.7.4 (2011-09-15)
+==================
+
+- Changed repository location [Simone Deponti]
+
+- Made DEBUG explicit [Simone Deponti]
+
+- Fixed paths on Windows [Dimitri Roche]
+
+
 0.7.3 (2011-03-30)
 ==================
 

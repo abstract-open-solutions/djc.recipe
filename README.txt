@@ -48,7 +48,7 @@ Then you can run the tests using::
 Links
 *****
 
-- Code repository: http://gitorious.org/djc-recipe/djc-recipe
+- Code repository: http://github.com/abstract-open-solutions/djc.recipe
 - Discussions at https://groups.google.com/group/djcrecipe
 - Comments and questions at info@abstract.it
 

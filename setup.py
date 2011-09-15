@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-version = '0.7.3'
+version = '0.7.4'
 
 long_description = (
     read('README.txt')
@@ -31,7 +31,7 @@ long_description = (
 entry_point = 'djc.recipe.recipe:Recipe'
 entry_points = {"zc.buildout": ["default = %s" % entry_point]}
 
-tests_require=['zope.testing', 'zc.buildout']
+tests_require = ['zope.testing', 'zc.buildout']
 
 setup(name='djc.recipe',
       version=version,
@@ -48,7 +48,7 @@ setup(name='djc.recipe',
       keywords='',
       author='Simone Deponti',
       author_email='simone.deponti@abstract.it',
-      url='http://open.abstract.it/it/progetti/rilasci-abstract/djc.recipe/',
+      url='http://github.com/abstract-open-solutions/djc.recipe',
       license='BSD',
       packages=find_packages(exclude=['ez_setup']),
       namespace_packages=['djc'],
