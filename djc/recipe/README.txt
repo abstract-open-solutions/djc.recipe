@@ -443,7 +443,7 @@ Let's have a look at the manage script ::
     import djc.recipe.manage
     <BLANKLINE>
     if __name__ == '__main__':
-        djc.recipe.manage.main('.../parts/django/settings.py')
+        djc.recipe.manage.main(r'.../parts/django/settings.py')
 
 As we can see, the ``main()`` function of the ``manage`` module is called,
 passing in the file with the settings as only argument.
@@ -850,7 +850,7 @@ a python module containing an ``app.py`` file, which can be loaded by
     <BLANKLINE>
     import djc.recipe.wsgi
     <BLANKLINE>
-    application = djc.recipe.wsgi.main('.../parts/django/settings.py')
+    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
     <BLANKLINE>
     def app_factory(global_config, **local_config):
         """This function wraps our simple WSGI app so it
