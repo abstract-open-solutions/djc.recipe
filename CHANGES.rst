@@ -1,4 +1,4 @@
-0.8.1 (unreleased)
+0.8.1 (2011-09-22)
 ==================
 
 - Fixed MANIFEST.in [Simone Deponti]
