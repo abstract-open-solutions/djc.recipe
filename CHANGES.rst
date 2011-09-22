@@ -1,7 +1,7 @@
 0.8.1 (unreleased)
 ==================
 
-- No changes so far
+- Fixed MANIFEST.in [Simone Deponti]
 
 
 0.8 (2011-09-22)
