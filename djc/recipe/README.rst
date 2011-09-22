@@ -92,6 +92,10 @@ pth-files
     A number of pth-files from which to load additional python modulesthat
     should be present in the buildout.
 
+initialization
+    Allows extra python code to be added to both the manage and the *WSGI*
+    script: see `Custom initialization`_ for more details.
+
 environment-vars
     Allows one to override OS environment vars by setting them during
     ``manage.py`` run. One environment variable name and value per line, space
@@ -106,6 +110,7 @@ environment-vars
 
     You might want to also check ``gocept.recipe.env`` buildout recipe if you
     wish to extend existing environment variables, like ``PATH``.
+    See `Custom initialization`_ for more details and an example.
 
 Templating
 ==========
@@ -1006,6 +1011,169 @@ And check what changes ::
 As you can see, the log file parameter is passed to the application: it is to
 be noted that all relative paths are intended as relative to the buildout root.
 
+Custom initialization
+=====================
+
+Sometimes we have the need to add some particular initialization code to both
+the manage script and the *WSGI* application, or have certain environment
+variables set in that process without recurring to esoteric configuration.
+
+The first need is resolved by the ``initialization`` option: suppose we want
+our manage and *WSGI* scripts to check that an integer is really an integer
+before starting (hence safely aborting if the world has turned upside down).
+
+We would write our buildout::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... wsgi = true
+    ... initialization =
+    ...     if not isinstance(1, int):
+    ...         raise TypeError("World has turned upside down")
+    ... """)
+
+And launch it::
+
+    >>> print "start\n", system(buildout)
+    start
+    ...
+    Installing django.
+    django: Generating settings in ...
+    ...
+    django: Creating script at .../bin/django
+    Generated script '.../bin/django'.
+    django: Creating script at .../parts/django/djc_recipe_django/app.py
+    Generated script '.../parts/django/djc_recipe_django/app.py'.
+    <BLANKLINE>
+
+And see that our code is present in both ``bin/django`` and ``app.py``::
+
+    >>> cat('bin', 'django')
+    #!...
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    if not isinstance(1, int):
+        raise TypeError("World has turned upside down")
+    <BLANKLINE>
+    import djc.recipe.manage
+    <BLANKLINE>
+    if __name__ == '__main__':
+        djc.recipe.manage.main(r'.../parts/django/settings.py')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+    #!...
+    <BLANKLINE>
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    if not isinstance(1, int):
+        raise TypeError("World has turned upside down")
+    <BLANKLINE>
+    import djc.recipe.wsgi
+    <BLANKLINE>
+    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
+    <BLANKLINE>
+    def app_factory(global_config, **local_config):
+        """This function wraps our simple WSGI app so it
+        can be used with paste.deploy"""
+        return application
+
+A slightly more useful example would be the need to have special environment
+variables set before django is initialized, for example one might want to set
+``GOOGLE_APPENGINE_PROJECT_ROOT`` to ``/my/path``.
+
+In order to do so, the ``environment-vars`` option is used::::
+
+    >>> write('buildout.cfg',
+    ... """
+    ... [buildout]
+    ... parts = django
+    ... offline = false
+    ... index = http://pypi.python.org/simple/
+    ... find-links = packages
+    ...
+    ... [django]
+    ... recipe = djc.recipe
+    ... project = dummydjangoprj
+    ... wsgi = true
+    ... environment-vars =
+    ...     GOOGLE_APPENGINE_PROJECT_ROOT /my/path
+    ... """)
+
+The buildout is launched::
+
+    >>> print "start\n", system(buildout)
+    start
+    ...
+    Installing django.
+    django: Generating settings in ...
+    ...
+    django: Creating script at .../bin/django
+    Generated script '.../bin/django'.
+    django: Creating script at .../parts/django/djc_recipe_django/app.py
+    Generated script '.../parts/django/djc_recipe_django/app.py'.
+    <BLANKLINE>
+
+And see that environment variables initialization code is present (via
+``os.environ``) in both ``bin/django`` and ``app.py``::
+
+    >>> cat('bin', 'django')
+    #!...
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    <BLANKLINE>
+    <BLANKLINE>
+    import os
+    os.environ["GOOGLE_APPENGINE_PROJECT_ROOT"] = r"/my/path"
+    <BLANKLINE>
+    <BLANKLINE>
+    import djc.recipe.manage
+    <BLANKLINE>
+    if __name__ == '__main__':
+        djc.recipe.manage.main(r'.../parts/django/settings.py')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+    #!...
+    <BLANKLINE>
+    <BLANKLINE>
+    import sys
+    sys.path[0:0] = [
+      ...
+      ]
+    <BLANKLINE>
+    <BLANKLINE>
+    <BLANKLINE>
+    import os
+    os.environ["GOOGLE_APPENGINE_PROJECT_ROOT"] = r"/my/path"
+    <BLANKLINE>
+    <BLANKLINE>
+    import djc.recipe.wsgi
+    <BLANKLINE>
+    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
+    <BLANKLINE>
+    def app_factory(global_config, **local_config):
+        """This function wraps our simple WSGI app so it
+        can be used with paste.deploy"""
+        return application
+
 .. _Tempita: http://pypi.python.org/pypi/Tempita/
 
 .. _`mr.developer`: http://pypi.python.org/pypi/mr.developer
@@ -1015,7 +1183,7 @@ be noted that all relative paths are intended as relative to the buildout root.
        subsequently.
 
 .. [#] For further information, refer to Django's docs at
-       http://docs.djangoproject.com/en/1.2/ref/settings/#email-file-path
+       http://docs.djangoproject.com/en/1.3/ref/settings/#email-file-path
 
 .. [#] The small module is needed because ``uwsgi`` will refuse to load a rogue
        script, but will load a module (hence, with some ``PYTHONPATH`` magic,

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable-msg=W0602,W0102,R0912,R0915
 """This is able to set up a django system. It does not do much, besides setting
 up a proper ``settings.py`` file and having a ``bin/django`` script load it.
 
@@ -183,15 +184,6 @@ def split_dburl(url):
     return result
 
 
-def listify(data):
-    lines = []
-    for raw_line in data.splitlines():
-        line = raw_line.strip()
-        if line != '':
-            lines.append(line)
-    return lines
-
-
 class Recipe(object):
     """A Django buildout recipe
     """
@@ -287,36 +279,48 @@ class Recipe(object):
                     "(es 'project = my.django.project') "
                     "if 'urlconf' and 'templates' are not." % self.name
                 )
-        # functions that are used in templates
-        def t_absolute_path(url):
-            return os.path.join(
-                self.buildout['buildout']['directory'], url
-            )
-
-        def t_rfc822tuplize(data):
-            m = re.match('(.+)\s+<(.+)>', data)
-            if m is None:
-                return (data,)
-            else:
-                return (m.group(1), m.group(2))
-
-        def t_boolify(data):
-            if data.lower() in ['true', 'on', '1']:
-                return True
-            return False
-
-        def t_join(data, infix, prefix="", suffix=""):
-            return prefix+infix.join(data)+suffix
 
         # here go functions you'd like to have available in templates
         self._template_namespace = {
-            'absolute_path': t_absolute_path,
-            'listify': listify,
-            'rfc822tuplize': t_rfc822tuplize,
-            'boolify': t_boolify,
-            'join': t_join,
+            'absolute_path': self.t_absolute_path,
+            'listify': self.t_listify,
+            'rfc822tuplize': self.t_rfc822tuplize,
+            'boolify': self.t_boolify,
+            'join': self.t_join,
             'dump': repr
         }
+
+    @staticmethod
+    def t_listify(data):
+        lines = []
+        for raw_line in data.splitlines():
+            line = raw_line.strip()
+            if line != '':
+                lines.append(line)
+        return lines
+
+    def t_absolute_path(self, url):
+        return os.path.join(
+            self.buildout['buildout']['directory'], url
+        )
+
+    @staticmethod
+    def t_rfc822tuplize(data):
+        m = re.match('(.+)\s+<(.+)>', data)
+        if m is None:
+            return (data,)
+        else:
+            return (m.group(1), m.group(2))
+
+    @staticmethod
+    def t_boolify(data):
+        if data.lower() in ['true', 'on', '1']:
+            return True
+        return False
+
+    @staticmethod
+    def t_join(data, infix, prefix="", suffix=""):
+        return prefix+infix.join(data)+suffix
 
     @memoized_property
     def rws(self):
@@ -365,7 +369,7 @@ class Recipe(object):
         else:
             stream = open(secret_file, 'wb')
             chars = u'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
-            data = u''.join([random.choice(chars) for i in range(50)])
+            data = u''.join([random.choice(chars) for __ in range(50)])
             stream.write(data.encode('utf-8')+u"\n")
             stream.close()
             self._logger.debug(
@@ -384,7 +388,9 @@ class Recipe(object):
             value = variables.pop(key).strip()
             if value != '':
                 databases['default'][key[len('database_'):].upper()] = value
-        additional_databases = listify(variables.pop('additional_databases'))
+        additional_databases = self.t_listify(
+            variables.pop('additional_databases')
+        )
         for additional_database in additional_databases:
             try:
                 name, url = additional_database.split('=', 1)
@@ -446,9 +452,59 @@ class Recipe(object):
         )
         return template.substitute(variables)
 
-    def _create_script(self, name, path, module, attr, extra_attr = [], initialization=""):
-        """ Create arbitary bootstrap script """
-        requirements, ws = self.rws
+    def _create_script(self, name, path, module, attr, extra_attr = []):
+        """Create arbitrary boot script.
+
+        This script will also include the eventual code found in
+        ``initialization`` and will also set (via ``os.environ``) the
+        environment variables found in ``environment-vars``
+        """
+
+        # The initialization code is expressed as a list of lines
+        initialization = []
+
+        # Gets the initialization code: the tricky part here is to preserve
+        # indentation. This is obtained by getting all the lines and then
+        # finding the initial whitespace common to all lines, excluding blank
+        # lines: the obtained whitespace is then subtracted from all lines.
+        raw_code = []
+        residual_whitespace = None
+        whitespace_regex = re.compile(r'^([ ]+)')
+        for line in self.options.get("initialization", "").splitlines():
+            if line != "":
+                m = whitespace_regex.search(line)
+                if m is None:
+                    initial_whitespace = 0
+                else:
+                    initial_whitespace = len(m.group(1))
+                if residual_whitespace is None or \
+                        initial_whitespace < residual_whitespace:
+                    residual_whitespace = initial_whitespace
+                raw_code.append(line)
+        for line in raw_code:
+            initialization.append(line[residual_whitespace:])
+
+        # Gets the environment-vars option and generates code to set the
+        # enviroment variables via os.environ
+        environment_vars = []
+        for line in self.t_listify(self.options.get("environment-vars", "")):
+            try:
+                var_name, raw_value = line.split(" ", 1)
+            except ValueError:
+                raise RuntimeError(
+                    "Bad djc.recipe environment-vars contents: %s" % line
+                )
+            environment_vars.append(
+                'os.environ["%s"] = r"%s"' % (
+                    var_name,
+                    raw_value.strip()
+                )
+            )
+        if len(environment_vars) > 0:
+            initialization.append("import os")
+            initialization.extend(environment_vars)
+
+        __, ws = self.rws
         self._logger.info(
             "Creating script at %s" % (os.path.join(path, name),)
         )
@@ -457,7 +513,11 @@ class Recipe(object):
         else:
             extras = ''
 
-        # See http://svn.zope.org/zc.buildout/trunk/src/zc/buildout/easy_install.py?rev=105585&view=auto
+        if len(initialization) > 0:
+            initialization = "\n"+"\n".join(initialization)+"\n"
+        else:
+            initialization = ""
+
         return zc.buildout.easy_install.scripts(
             [(name, module, attr)],
             ws, self.options['executable'],
@@ -473,40 +533,14 @@ class Recipe(object):
             )
         )
 
-    def create_script(self):
-        """ Generate bin/django script """
-
-        # Read environment-vars option and convert it contents to Python code
-        evars_data = self.options.get("environment-vars", "")
-
-        if evars_data != "":
-
-                # Build an os.environ builder which takes environment vars we have
-                # env_bootsrap contains a string stub which is inserted at the beginning of the script file
-                env_bootstrap = "\nimport os\n"
-
-                evars = evars_data.split("\n")
-                for var in evars:
-                        var = var.strip()
-
-                        if var == "":
-                                # Skip empty lines
-                                continue
-
-                        if not " " in var:
-                                raise RuntimeError("Bad djc.recipe environment-vars contents:" + evars_data)
-                        name, value = var.split(" ", 1) # split to key, remainder
-                        env_bootstrap += 'os.environ["%s"] = r"%s"\n' % (name, value)
-        else:
-                # No environment options
-                env_bootstrap = ""                
-
+    def create_manage_script(self):
+        """Creates the ``bin/${:__name__}`` script
+        """
         return self._create_script(
             self.options.get('control-script', self.name),
             self.buildout['buildout']['bin-directory'],
             'djc.recipe.manage',
-            'main',
-            initialization = env_bootstrap
+            'main'
         )
 
     def create_wsgi_script(self):
@@ -547,7 +581,7 @@ class Recipe(object):
 
     def install_project(self):
         if 'project' in self.options:
-            requirements, ws = self.rws
+            __, ws = self.rws
             project = dotted_import(
                 self.options['project'],
                 [d.location for d in ws]
@@ -574,7 +608,7 @@ class Recipe(object):
                 "'custom.module:directory'" % self.name
             )
         try:
-            requirements, ws = self.rws
+            __, ws = self.rws
             mod = dotted_import(mod, [d.location for d in ws])
         except ImportError:
             raise zc.buildout.UserError(
@@ -654,9 +688,9 @@ class Recipe(object):
             self.create_project() +
             self.create_static('static') +
             self.create_static('media') +
-            self.create_script()
+            self.create_manage_script()
         )
-        if self._template_namespace['boolify'](self.options.get('wsgi', 'false')):
+        if self.t_boolify(self.options.get('wsgi', 'false')):
             files += self.create_wsgi_script()
         return tuple(files)
 

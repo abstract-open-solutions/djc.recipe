@@ -8,25 +8,25 @@ from setuptools import setup, find_packages
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-version = '0.7.5dev'
+version = '0.8dev'
 
 long_description = (
-    read('README.txt')
+    read('README.rst')
     + '\n' +
     'Detailed Documentation\n'
     '**********************\n'
     + '\n' +
-    read('djc', 'recipe', 'README.txt')
+    read('djc', 'recipe', 'README.rst')
     + '\n' +
     'Contributors\n'
     '************\n'
     + '\n' +
-    read('CONTRIBUTORS.txt')
+    read('CONTRIBUTORS.rst')
     + '\n' +
     'Change history\n'
     '**************\n'
     + '\n' +
-    read('CHANGES.txt')
+    read('CHANGES.rst')
     )
 entry_point = 'djc.recipe.recipe:Recipe'
 entry_points = {"zc.buildout": ["default = %s" % entry_point]}

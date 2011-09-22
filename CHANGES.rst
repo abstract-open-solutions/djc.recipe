@@ -1,7 +1,12 @@
-0.7.5 (unreleased)
-==================
+0.8 (unreleased)
+================
 
-- No changes.
+- Refactored environment variables support [Simone Deponti]
+
+- Added initialization support [Simone Deponti]
+
+- Fixed documentation and added tests [Simone Deponti]
+
 
 0.7.4 (2011-09-15)
 ==================
