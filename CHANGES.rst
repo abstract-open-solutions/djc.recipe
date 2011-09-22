@@ -1,4 +1,4 @@
-0.8 (unreleased)
+0.8 (2011-09-22)
 ================
 
 - Refactored environment variables support [Simone Deponti]
