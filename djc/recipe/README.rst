@@ -332,13 +332,15 @@ That cleared, we create the most simple buildout conceivable using this recipe :
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
     ... [django]
     ... recipe = djc.recipe
     ... project = dummydjangoprj
-    ... """)
+    ... """ % cache_dir)
 
 And run it ::
 
@@ -464,6 +466,8 @@ We can now try to set up an example development environment, passing
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -471,7 +475,7 @@ We can now try to set up an example development environment, passing
     ... recipe = djc.recipe
     ... project = dummydjangoprj
     ... debug = true
-    ... """)
+    ... """ % cache_dir)
     >>> print "start\n", system(buildout)
     start
     ...
@@ -554,6 +558,8 @@ Let's start by extending it: ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -562,7 +568,7 @@ Let's start by extending it: ::
     ... project = dummydjangoprj
     ... settings-template-extension = template-extension.py.in
     ... config-variable-one = test
-    ... """)
+    ... """ % cache_dir)
 
 Launch the buildout and then take a look at the generated ``settings.py``
 file ::
@@ -643,6 +649,8 @@ If, instead, we totally override the template: ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -655,7 +663,7 @@ If, instead, we totally override the template: ::
     ...     spam
     ...     eggs
     ...     spam
-    ... """)
+    ... """ % cache_dir)
 
 
 Launch the buildout and then take a look at the generated ``settings.py``
@@ -727,6 +735,8 @@ Let's create a buildout config and run it ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ... develop = src/dummydjangoapp1
@@ -737,7 +747,7 @@ Let's create a buildout config and run it ::
     ... project = dummydjangoprj
     ... static-directory = static
     ... static-origin = dummydjangoapp1:static
-    ... """)
+    ... """ % cache_dir)
     >>> rmdir('static')
     >>> print system(buildout)
     Develop: '.../dummydjangoapp1'
@@ -782,6 +792,8 @@ So if we have this buildout ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ... develop =
@@ -798,7 +810,7 @@ So if we have this buildout ::
     ... static-origin =
     ...     dummydjangoapp1:static
     ...     dummydjangoapp2:static
-    ... """)
+    ... """ % cache_dir)
 
 It is reasonable to expect that, after running it, the content of the
 ``main.css`` file is the one provided by the version held by
@@ -833,6 +845,8 @@ buildout written like this ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ... develop =
@@ -849,7 +863,7 @@ buildout written like this ::
     ... static-origin =
     ...     dummydjangoapp1:static:app1
     ...     dummydjangoapp2:static:app2
-    ... """)
+    ... """ % cache_dir)
 
 It is to be noticed that the ``static-origin`` values have now three elements,
 the latter being the destination directory, which is defined as a subdirectory
@@ -899,6 +913,8 @@ recipe to ``true``: ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -906,7 +922,7 @@ recipe to ``true``: ::
     ... recipe = djc.recipe
     ... project = dummydjangoprj
     ... wsgi = true
-    ... """)
+    ... """ % cache_dir)
 
 And launch the buildout: ::
 
@@ -963,6 +979,8 @@ Let's write the buildout ::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -971,7 +989,7 @@ Let's write the buildout ::
     ... project = dummydjangoprj
     ... wsgi = true
     ... wsgi-logfile = wsgi.log
-    ... """)
+    ... """ % cache_dir)
 
 Launch it ::
 
@@ -1029,6 +1047,8 @@ We would write our buildout::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -1039,7 +1059,7 @@ We would write our buildout::
     ... initialization =
     ...     if not isinstance(1, int):
     ...         raise TypeError("World has turned upside down")
-    ... """)
+    ... """ % cache_dir)
 
 And launch it::
 
@@ -1104,6 +1124,8 @@ In order to do so, the ``environment-vars`` option is used::::
     ... [buildout]
     ... parts = django
     ... offline = false
+    ... download-cache = %s
+    ... newest = false
     ... index = http://pypi.python.org/simple/
     ... find-links = packages
     ...
@@ -1113,7 +1135,7 @@ In order to do so, the ``environment-vars`` option is used::::
     ... wsgi = true
     ... environment-vars =
     ...     GOOGLE_APPENGINE_PROJECT_ROOT /my/path
-    ... """)
+    ... """ % cache_dir)
 
 The buildout is launched::
 

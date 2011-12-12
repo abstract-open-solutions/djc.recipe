@@ -13,3 +13,4 @@ parts
 eggs
 develop-eggs
 .installed.cfg
+test-cache

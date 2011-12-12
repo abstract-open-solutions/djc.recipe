@@ -45,6 +45,18 @@ def setUp(test):
         raise
     finally:
         shutil.rmtree(tmpdir)
+    cache_dir = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '..',
+            '..',
+            '..',
+            'test-cache'
+        )
+    )
+    if not os.path.isdir(cache_dir):
+        os.makedirs(cache_dir)
+    test.globs['cache_dir'] = cache_dir
 
 
 def test_suite():
