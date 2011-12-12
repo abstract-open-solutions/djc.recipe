@@ -139,49 +139,65 @@ def normalize_keys(mapping):
         yield (k.replace('-', '_'), v)
 
 
-dburl_regex = re.compile(
-    r"(?P<ENGINE>[a-zA-Z0-9_.]+)://(?:"
-    r"(?P<USER>[a-zA-Z0-9_./+\-]+):"
-    r"(?P<PASSWORD>[a-zA-Z0-9_./+\-]+)@)?"
-    r"(?P<HOST>[a-zA-Z0-9.]+)?"
-    r"(?::(?P<PORT>[0-9]+))?/"
-    r"(?P<NAME>[a-zA-Z0-9_./+\-]+)"
-    r"(?:\((?P<OPTIONS>[a-zA-Z0-9_./=,+\-]+)\))?"
-)
+# BBB: Due to backward compatibility reasons, we support an array of regexes
+# that match db urls specifications.
+#
+# These are tried in order, so first the deprecated method is tried, then the
+# new one is tried. An "unquote" function is also specified.
+dburl_regexes = [
+    (re.compile(
+        r"(?P<ENGINE>[a-zA-Z0-9_.]+)://(?:"
+        r"(?P<USER>[a-zA-Z0-9_./+\-]+):"
+        r"(?P<PASSWORD>[a-zA-Z0-9_./+\-]+)@)?"
+        r"(?P<HOST>[a-zA-Z0-9.]+)?"
+        r"(?::(?P<PORT>[0-9]+))?/"
+        r"(?P<NAME>[a-zA-Z0-9_./+\-]+)"
+        r"(?:\((?P<OPTIONS>[a-zA-Z0-9_./=,+\-]+)\))?"
+     ), urllib.unquote_plus),
+    (re.compile(
+        r"engine=(?P<ENGINE>\S+)\s+"
+        r"(?:user=(?P<USER>\S+)\s+"
+        r"password=(?P<PASSWORD>\S+)\s+)?"
+        r"(?:host=(?P<HOST>\S+)\s+)?"
+        r"(?:port=(?P<PORT>[0-9]+)\s+)?"
+        r"name=(?P<NAME>[a-zA-Z0-9_./+\-]+)"
+        r"(?:\s+options=\((?P<OPTIONS>\S+)\))?"
+     ), lambda x: x)
+]
 
 
 def split_dburl(url):
-    global dburl_regex
+    global dburl_regexes
 
-    m = dburl_regex.match(url)
-    if m is None:
-        raise ValueError(
-            "The database url '%s' is incorrect" % url
-        )
-    result = m.groupdict()
-    for key in result.keys():
-        if result[key] is None:
-            del result[key]
-    for key in ['USER', 'PASSWORD', 'NAME']:
-        if key in result:
-            result[key] = urllib.unquote_plus(result[key])
-    if 'OPTIONS' in result:
-        options = [ o.strip() for o in result['OPTIONS'].split(',') ]
-        result['OPTIONS'] = {}
-        for option in options:
-            try:
-                name, value = option.split('=')
-            except ValueError:
-                raise ValueError(
-                    ("The database url '%s' is incorrect, "
-                     "we cannot split the option '%s'") % (
-                        url, option
-                    )
-                )
-            result['OPTIONS'][urllib.unquote_plus(name)] = urllib.unquote_plus(
-                value
-            )
-    return result
+    for regex, unquote in dburl_regexes:
+        m = regex.match(url)
+        if m is not None:
+            result = m.groupdict()
+            for key in result.keys():
+                if result[key] is None:
+                    del result[key]
+            for key in ['USER', 'PASSWORD', 'NAME']:
+                if key in result:
+                    result[key] = unquote(result[key])
+            if 'OPTIONS' in result:
+                options = [ o.strip() for o in result['OPTIONS'].split(',') ]
+                result['OPTIONS'] = {}
+                for option in options:
+                    try:
+                        name, value = option.split('=')
+                    except ValueError:
+                        raise ValueError(
+                            ("The database url '%s' is incorrect, "
+                             "we cannot split the option '%s'") % (
+                                url, option
+                            )
+                        )
+                    result['OPTIONS'][unquote(name)] = unquote(value)
+            return result
+    # If we couldn't match any regex, this is invalid
+    raise ValueError(
+        "The database url '%s' is incorrect" % url
+    )
 
 
 class Recipe(object):
@@ -219,7 +235,7 @@ class Recipe(object):
 
         self.options.setdefault(
             'database',
-            'django.db.backends.sqlite3:///%s' %  os.path.join(
+            'engine=django.db.backends.sqlite3 name=%s' %  os.path.join(
                 self.buildout['buildout']['directory'],
                 'storage.db'
             )

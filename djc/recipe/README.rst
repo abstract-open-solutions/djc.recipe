@@ -171,23 +171,26 @@ The default template accepts a number of options. They are to be considered all
 optional, as sensible defaults will be provided if omitted.
 
 database
-    The url of the default Django database, in the form
-    ``<backend>://(<user>:<password>@)(<host>)(:<port>)/<name>((<options>))``.
+    The settings of the default Django database, in the form
+    ``engine=<backend> (user=<user> password=<password>) (host=<host>) (port=<port>) name=<name> (options=(<options>))``.
     Parenthesized values are to be considered as optional.  It is to be noted
     that the options are expected to be enclosed within parentesis (``(``),
-    separated by comma and in the form ``<name>=<value>``, and that ``user``,
-    ``password``, ``name`` and option names and values must be form-urlencoded.
+    separated by comma and in the form ``<name>=<value>``.
     An example url might be:
-    ``django.db.backends.mysql://usr:pwd@localhost:3306/mydb(opt1=val1,opt2=val2)``
+    ``engine=django.db.backends.mysql user=usr password=pwd host=localhost port=3306 name=mydb options=(opt1=val1,opt2=val2)``
     where ``usr``, ``pwd``, ``mydb`` etc should be replaced by your
     configuration values.
     Defaults to
-    ``django.db.backends.sqlite3:///${buildout:directory}/storage.db``
+    ``engine=django.db.backends.sqlite3 name=/${buildout:directory}/storage.db``
+
+    .. note::
+       The old url-like format is still functioning but is currently
+       deprecated and might be removed in the future.
 
 additional-databases
-    A list of databases in the form ``name=url``, each on one line, where
-    ``name`` is the Django-internal database name and ``url`` is the database
-    url in the same form as that provided by ``database``
+    A list of databases in the form ``name=parameters``, each on one line,
+    where ``name`` is the Django-internal database name and ``parameters`` is
+    the database settings in the same form as that provided by ``database``
 
 media-url
     The static content prefix path. Defaults to ``media``
