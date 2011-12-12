@@ -1,7 +1,15 @@
-0.8.2 (unreleased)
-==================
+0.9 (unreleased)
+================
 
-- No changes so far
+- Added indentation preservation for initialization code. [Simone Deponti]
+
+- Added a new default way to express databases [Simone Deponti]
+
+- Added the ability to reference other sections. [Simone Deponti]
+
+- Made 'settings.py' importable. [Simone Deponti]
+
+- Sped up tests. [Simone Deponti]
 
 
 0.8.1 (2011-09-22)
