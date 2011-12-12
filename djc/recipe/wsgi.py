@@ -1,20 +1,9 @@
-import imp, sys, logging
+import logging
+from utils import setup_django
 
-from django.core.management import setup_environ
 
-def main(settings_file, logfile=None, loglevel=None):
-    try:
-        imp.acquire_lock()
-        mod = imp.load_source('_django_settings', settings_file)
-    except Exception, e:
-        imp.release_lock()
-        sys.stderr.write("Error loading the settings module '%s': %s"
-                            % (settings_file, e))
-        return sys.exit(1)
-
-    imp.release_lock()
-    # Setup settings
-    setup_environ(mod, '_django_settings')
+def main(settings, logfile=None, loglevel=None):
+    setup_django(settings)
 
     if logfile:
         kwargs = {

@@ -280,6 +280,14 @@ class Recipe(object):
                     "if 'urlconf' and 'templates' are not." % self.name
                 )
 
+        # We will create a fake python module into which all our generated
+        # scripts and settings will live. This makes them importable
+        self.module_path = os.path.join(
+            self.options['location'],
+            'djc_recipe_%s' % self.name
+        )
+
+
         # here go functions you'd like to have available in templates
         self._template_namespace = {
             'absolute_path': self.t_absolute_path,
@@ -331,7 +339,9 @@ class Recipe(object):
 
     @memoized_property
     def extra_paths(self):
-        extra_paths = []
+        extra_paths = [
+            self.module_path
+        ]
         # Add libraries found by a site .pth files to our extra-paths.
         if 'pth-files' in self.options:
             import site
@@ -524,10 +534,10 @@ class Recipe(object):
             path,
             extra_paths = self.extra_paths,
             initialization=initialization,
-            arguments = "r'%s'%s" % (
-                os.path.join(
-                    self.options['location'],
-                    _settings_name
+            arguments = "'%s'%s" % (
+                "%s.%s" % (
+                    os.path.basename(self.module_path.rstrip(os.sep)),
+                    os.path.splitext(_settings_name)[0].split('$py')[0]
                 ),
                 extras
             )
@@ -548,15 +558,6 @@ class Recipe(object):
         zc.buildout.easy_install.script_template = \
                 zc.buildout.easy_install.script_header + \
                     _wsgi_script_template
-        # uwsgi needs a module in the pythonpath to load it out, so we satisfy
-        # uwsgi's pressing needs
-        module_path = os.path.join(
-            self.options['location'],
-            'djc_recipe_%s' % self.name
-        )
-        if not os.path.isdir(module_path):
-            os.mkdir(module_path)
-        touch(os.path.join(module_path, '__init__.py'), content = '#')
         extras = []
         if 'wsgi-logfile' in self.options:
             extras.append(
@@ -571,7 +572,7 @@ class Recipe(object):
                 )
         script = self._create_script(
             'app.py',
-            module_path,
+            self.module_path,
             'djc.recipe.wsgi',
             'main',
             extras
@@ -661,7 +662,7 @@ class Recipe(object):
         return [ media_directory ]
 
     def create_project(self):
-        project_dir = self.options['location']
+        project_dir = self.module_path
         if not os.path.exists(project_dir):
             self._logger.debug("Creating %s" % project_dir)
             os.makedirs(project_dir)
@@ -671,6 +672,8 @@ class Recipe(object):
                     self.name, project_dir
                 )
             )
+        self._logger.info("Making %s a module" % self.module_path)
+        touch(os.path.join(self.module_path, '__init__.py'), content = '#')
         self._logger.info("Generating settings in %s" % project_dir)
         fullpath = os.path.join(project_dir, _settings_name)
         self._logger.debug("(Over)writing %s" % fullpath)

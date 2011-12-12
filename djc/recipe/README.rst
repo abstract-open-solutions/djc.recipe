@@ -354,6 +354,7 @@ And run it ::
     django: Making empty media directory ...
     django: Creating script at ...
     Generated script ...
+    ...
     <BLANKLINE>
 
 This generated some files and directories for us:
@@ -362,7 +363,7 @@ This generated some files and directories for us:
 
 2. A media directory (empty) at ``static`` (default option)
 
-3. A settings file located in ``parts/django/settings.py``
+3. A settings file located in ``parts/django/djc_recipe_django/settings.py``
 
 So, as we can see, we have a ``static`` directory in the root, a ``bin/django``
 script and a ``parts/django`` part ::
@@ -389,8 +390,17 @@ script and a ``parts/django`` part ::
 Let's look at this first ::
 
     >>> ls('parts', 'django')
+    d  djc_recipe_django
+    >>> ls('parts', 'django', 'djc_recipe_django')
+    -  __init__.py
     -  settings.py
-    >>> cat('parts', 'django', 'settings.py')
+
+Therefore, we can see how ``djc_recipe_django`` is actually an importable
+python module.
+
+If we examine it::
+
+    >>> cat('parts', 'django', 'djc_recipe_django', 'settings.py')
     # coding=utf-8
     SERVER_EMAIL = 'root@localhost'
     ADMINS = (
@@ -453,7 +463,7 @@ Let's have a look at the manage script ::
     import djc.recipe.manage
     <BLANKLINE>
     if __name__ == '__main__':
-        djc.recipe.manage.main(r'.../parts/django/settings.py')
+        djc.recipe.manage.main('djc_recipe_django.settings')
 
 As we can see, the ``main()`` function of the ``manage`` module is called,
 passing in the file with the settings as only argument.
@@ -480,6 +490,7 @@ We can now try to set up an example development environment, passing
     start
     ...
     Installing django.
+    django: Making ... a module
     django: Generating settings in ...
     django: Making empty media directory ...
     django: Making empty media directory ...
@@ -489,7 +500,7 @@ We can now try to set up an example development environment, passing
 
 And look at the generated settings::
 
-    >>> cat('parts', 'django', 'settings.py')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'settings.py')
     # coding=utf-8
     SERVER_EMAIL = 'root@localhost'
     ADMINS = (
@@ -579,7 +590,7 @@ file ::
     ...
     Generated script ...
     <BLANKLINE>
-    >>> cat('parts', 'django', 'settings.py')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'settings.py')
     # coding=utf-8
     SERVER_EMAIL = 'root@localhost'
     ADMINS = (
@@ -675,7 +686,7 @@ file ::
     ...
     Generated script ...
     <BLANKLINE>
-    >>> cat('parts', 'django', 'settings.py')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'settings.py')
     # Total override
     FOODS = (
         'spam',
@@ -930,6 +941,7 @@ And launch the buildout: ::
     start
     ...
     Installing django.
+    ...
     django: Generating settings in ...
     ...
     django: Creating script at .../bin/django
@@ -945,6 +957,7 @@ a python module containing an ``app.py`` file, which can be loaded by
     >>> ls('parts', 'django', 'djc_recipe_django')
     -  __init__.py
     -  app.py
+    -  settings.py
     >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
     #!...
     <BLANKLINE>
@@ -956,7 +969,7 @@ a python module containing an ``app.py`` file, which can be loaded by
     <BLANKLINE>
     import djc.recipe.wsgi
     <BLANKLINE>
-    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
+    application = djc.recipe.wsgi.main('djc_recipe_django.settings')
     <BLANKLINE>
     def app_factory(global_config, **local_config):
         """This function wraps our simple WSGI app so it
@@ -997,6 +1010,7 @@ Launch it ::
     start
     ...
     Installing django.
+    ...
     django: Generating settings in ...
     ...
     django: Creating script at .../bin/django
@@ -1067,6 +1081,7 @@ And launch it::
     start
     ...
     Installing django.
+    ...
     django: Generating settings in ...
     ...
     django: Creating script at .../bin/django
@@ -1106,7 +1121,7 @@ And see that our code is present in both ``bin/django`` and ``app.py``::
     <BLANKLINE>
     import djc.recipe.wsgi
     <BLANKLINE>
-    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
+    application = djc.recipe.wsgi.main('djc_recipe_django.settings')
     <BLANKLINE>
     def app_factory(global_config, **local_config):
         """This function wraps our simple WSGI app so it
@@ -1143,6 +1158,7 @@ The buildout is launched::
     start
     ...
     Installing django.
+    ...
     django: Generating settings in ...
     ...
     django: Creating script at .../bin/django
@@ -1171,7 +1187,7 @@ And see that environment variables initialization code is present (via
     import djc.recipe.manage
     <BLANKLINE>
     if __name__ == '__main__':
-        djc.recipe.manage.main(r'.../parts/django/settings.py')
+        djc.recipe.manage.main('djc_recipe_django.settings')
     >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
     #!...
     <BLANKLINE>
@@ -1189,7 +1205,7 @@ And see that environment variables initialization code is present (via
     <BLANKLINE>
     import djc.recipe.wsgi
     <BLANKLINE>
-    application = djc.recipe.wsgi.main(r'.../parts/django/settings.py')
+    application = djc.recipe.wsgi.main('djc_recipe_django.settings')
     <BLANKLINE>
     def app_factory(global_config, **local_config):
         """This function wraps our simple WSGI app so it
