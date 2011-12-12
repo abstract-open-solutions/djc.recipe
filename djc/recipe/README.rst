@@ -1059,7 +1059,7 @@ before starting (hence safely aborting if the world has turned upside down).
 
 We would write our buildout::
 
-    >>> write('buildout.cfg',
+    >>> write('buildout.cfg', #doctest:-NORMALIZE_WHITESPACE
     ... """
     ... [buildout]
     ... parts = django
@@ -1074,8 +1074,8 @@ We would write our buildout::
     ... project = dummydjangoprj
     ... wsgi = true
     ... initialization =
-    ...     if not isinstance(1, int):
-    ...         raise TypeError("World has turned upside down")
+    ...     >>> if not isinstance(1, int):
+    ...     ...     raise TypeError("World has turned upside down")
     ... """ % cache_dir)
 
 And launch it::
@@ -1095,32 +1095,37 @@ And launch it::
 
 And see that our code is present in both ``bin/django`` and ``app.py``::
 
-    >>> cat('bin', 'django')
+    >>> cat('bin', 'django') #doctest:-NORMALIZE_WHITESPACE
     #!...
     <BLANKLINE>
     import sys
     sys.path[0:0] = [
-      ...
-      ]
+        ...
+        ]
+    <BLANKLINE>
+    <BLANKLINE>
     <BLANKLINE>
     if not isinstance(1, int):
         raise TypeError("World has turned upside down")
+    <BLANKLINE>
     <BLANKLINE>
     import djc.recipe.manage
     <BLANKLINE>
     if __name__ == '__main__':
-        djc.recipe.manage.main(r'.../parts/django/settings.py')
-    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py')
+        djc.recipe.manage.main('djc_recipe_django.settings')
+    >>> cat('parts', 'django', 'djc_recipe_django', 'app.py') #doctest:-NORMALIZE_WHITESPACE
     #!...
     <BLANKLINE>
     <BLANKLINE>
     import sys
     sys.path[0:0] = [
-      ...
-      ]
+        ...
+        ]
+    <BLANKLINE>
     <BLANKLINE>
     if not isinstance(1, int):
         raise TypeError("World has turned upside down")
+    <BLANKLINE>
     <BLANKLINE>
     import djc.recipe.wsgi
     <BLANKLINE>
@@ -1130,6 +1135,11 @@ And see that our code is present in both ``bin/django`` and ``app.py``::
         """This function wraps our simple WSGI app so it
         can be used with paste.deploy"""
         return application
+
+It is important to note that the first line of the python code was prepended
+with ``>>> `` while all the subsequent lines were prepended with ``... ``. This
+syntax is necessary if you want to preserve indentation: if you don't want, you
+can omit them but you must make sure to *never have constructs*.
 
 A slightly more useful example would be the need to have special environment
 variables set before django is initialized, for example one might want to set

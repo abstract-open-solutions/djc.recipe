@@ -17,14 +17,13 @@ from tempita import Template, bunch
 
 _egg_name = 'djc.recipe'
 _settings_name = 'settings.py'
-
 _wsgi_script_template = '''
 
 %(relative_paths_setup)s
 import sys
 sys.path[0:0] = [
-  %(path)s,
-  ]
+    %(path)s,
+    ]
 %(initialization)s
 import %(module_name)s
 
@@ -495,25 +494,26 @@ class Recipe(object):
         initialization = []
 
         # Gets the initialization code: the tricky part here is to preserve
-        # indentation. This is obtained by getting all the lines and then
-        # finding the initial whitespace common to all lines, excluding blank
-        # lines: the obtained whitespace is then subtracted from all lines.
-        raw_code = []
-        residual_whitespace = None
-        whitespace_regex = re.compile(r'^([ ]+)')
-        for line in self.options.get("initialization", "").splitlines():
+        # indentation.
+        # Since buildout does totally waste whitespace, if one wants to
+        # preserve indentation must prefix its lines with '>>> ' or '... '
+        raw_value = self.options.get("initialization", "")
+        is_indented = False
+        indentations = ('>>> ', '... ')
+        for line in raw_value.splitlines():
             if line != "":
-                m = whitespace_regex.search(line)
-                if m is None:
-                    initial_whitespace = 0
+                if len(initialization) == 0:
+                    if line.startswith(indentations[0]):
+                        is_indented = True
                 else:
-                    initial_whitespace = len(m.group(1))
-                if residual_whitespace is None or \
-                        initial_whitespace < residual_whitespace:
-                    residual_whitespace = initial_whitespace
-                raw_code.append(line)
-        for line in raw_code:
-            initialization.append(line[residual_whitespace:])
+                    if is_indented and not line.startswith(indentations[1]):
+                        raise zc.buildout.UserError(
+                            ("Line '%s' should be indented "
+                             "properly but is not") % line
+                        )
+                if is_indented:
+                    line = line[4:]
+                initialization.append(line)
 
         # Gets the environment-vars option and generates code to set the
         # enviroment variables via os.environ
