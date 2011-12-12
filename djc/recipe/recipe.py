@@ -12,7 +12,7 @@ The settings file is saved in ``parts/name/settings.py``.
 
 import os, re, logging, random, sys, pprint, urllib
 import zc.recipe.egg
-from tempita import Template
+from tempita import Template, bunch
 
 
 _egg_name = 'djc.recipe'
@@ -445,7 +445,12 @@ class Recipe(object):
             template_definition += stream.read().decode('utf-8')
             stream.close()
 
-        variables = dict(normalize_keys(self.options))
+        variables = {}
+        for section in self.buildout.keys():
+            variables[section] = bunch(
+                **dict(normalize_keys(self.buildout[section]))
+            )
+        variables.update(dict(normalize_keys(self.options)))
         self.fix_databases(variables)
         variables.update({ 'name': self.name, 'secret': self.secret })
         self._logger.debug(
