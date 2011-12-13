@@ -1,7 +1,7 @@
 0.9.1 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Fixed reST annoyance [Simone Deponti]
 
 
 0.9 (2011-12-13)
