@@ -1,4 +1,4 @@
-0.9 (unreleased)
+0.9 (2011-12-13)
 ================
 
 - Added indentation preservation for initialization code. [Simone Deponti]
