@@ -355,7 +355,7 @@ class Recipe(object):
     @memoized_property
     def extra_paths(self):
         extra_paths = [
-            self.module_path
+            self.options['location']
         ]
         # Add libraries found by a site .pth files to our extra-paths.
         if 'pth-files' in self.options:
