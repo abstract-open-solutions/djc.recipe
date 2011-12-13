@@ -1137,9 +1137,10 @@ And see that our code is present in both ``bin/django`` and ``app.py``::
         return application
 
 It is important to note that the first line of the python code was prepended
-with ``>>> `` while all the subsequent lines were prepended with ``... ``. This
-syntax is necessary if you want to preserve indentation: if you don't want, you
-can omit them but you must make sure to *never have constructs*.
+with ``>>>`` while all the subsequent lines were prepended with ``...`` (plus a
+space, on both). This syntax is necessary if you want to preserve indentation:
+if you don't want, you can omit them but you must make sure to *never have
+constructs*.
 
 A slightly more useful example would be the need to have special environment
 variables set before django is initialized, for example one might want to set
