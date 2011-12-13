@@ -1,4 +1,4 @@
-0.9.1 (unreleased)
+0.9.1 (2011-12-13)
 ==================
 
 - Fixed reST annoyance [Simone Deponti]
