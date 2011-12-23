@@ -1,0 +1,73 @@
+Description.
+
+Whatever::
+
+    >>> from djc.recipe.copier import tree
+    >>> a = tree([('a', 1), ('b', 2)])
+    >>> b = tree([('a', 1), ('b', 2)])
+    >>> hash(a) == hash(b)
+    True
+    >>> c = tree([('a', 1), ('b', 3)])
+    >>> d = tree([('a', 1), ('c', 2)])
+    >>> hash(a) == hash(c)
+    False
+    >>> hash(a) == hash(d)
+    False
+
+Whatever::
+
+    >>> e = tree([('a', 1), ('b', a)])
+    >>> f = tree([('a', 1), ('b', a)])
+    >>> hash(e) == hash(f)
+    True
+    >>> g = tree([('a', 1), ('b', c)])
+    >>> h = tree([('a', 1), ('b', d)])
+    >>> hash(e) == hash(g)
+    False
+    >>> hash(e) == hash(h)
+    False
+
+Whatever::
+
+    >>> t = tree()
+    >>> t['a'] = 1
+    >>> t['a']
+    1
+    >>> t.mset(['b', 'c', 'd'], 1)
+    >>> t.mget(['b', 'c', 'd'])
+    1
+
+Whatever::
+
+    >>> t.mset(['a', 'b'], 1) #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    KeyError: ['a', 'b']
+    >>> t.mget(['a', 'b']) #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    KeyError: ['a', 'b']
+
+Whatever::
+
+    >>> t.mset([], 1) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    ValueError: []
+    >>> t.mget([]) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    ValueError: []
+
+Whatever::
+
+    >>> t.mset('foo', 1) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    ValueError: foo
+    >>> t.mget('foo') # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    Traceback (most recent call last):
+      ...
+    ValueError: foo
+
+And that's all.

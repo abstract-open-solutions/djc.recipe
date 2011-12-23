@@ -13,6 +13,7 @@ The settings file is saved in ``parts/name/settings.py``.
 import os, re, logging, random, sys, pprint, urllib
 import zc.recipe.egg
 from tempita import Template, bunch
+from copier import Copier
 
 
 _egg_name = 'djc.recipe'
@@ -44,46 +45,6 @@ def touch(path, content = ''):
         content = ''
     fp.write(content)
     fp.close()
-
-
-def get_destination(fullpath, origin, destination):
-    components = [ destination ] + fullpath[len(origin):].split(os.sep)
-    return os.path.join(*components)
-
-
-def copytree(origin, destination, logger, link = False):
-    if not os.path.isdir(destination):
-        logger.debug("Creating missing destination %s" % destination)
-        os.makedirs(destination)
-    for root, dirs, files in os.walk(origin):
-        for name in files:
-            origin_path = os.path.join(root, name)
-            destination_path = get_destination(
-                origin_path, origin, destination
-            )
-            if link and hasattr(os, 'symlink'):
-                if os.path.isfile(destination_path):
-                    os.remove(destination_path)
-                os.symlink(origin_path, destination_path)
-            else:
-                logger.debug(
-                    "Copying %s to %s" % (origin_path, destination_path)
-                )
-                origin_fp = open(origin_path, "rb")
-                destination_fp = open(destination_path, "wb")
-                destination_fp.write(origin_fp.read())
-                origin_fp.close()
-                destination_fp.close()
-        for name in dirs:
-            origin_path = os.path.join(root, name)
-            destination_path = get_destination(
-                origin_path, origin, destination
-            )
-            if not os.path.isdir(destination_path):
-                logger.debug(
-                    "Making intermediate directory %s" % destination_path
-                )
-                os.mkdir(destination_path)
 
 
 def dotted_import(module, paths):
@@ -617,46 +578,54 @@ class Recipe(object):
                 os.path.join(os.path.dirname(project.__file__), 'templates')
             )
 
-    def copy_origin(self, origin, destination, link = False):
-        self._logger.info(
-            "Copying media from '%s' to '%s'" % (origin, destination)
-        )
-        try:
-            components = origin.split(':')
-            mod, directory = components[:2]
-        except ValueError:
-            raise zc.buildout.UserError(
-                "Error in '%s': media_origin must be in the form "
-                "'custom.module:directory'" % self.name
+    def copy_origin(self, origins, destination, link = False):
+        copier = Copier(link=link)
+        for origin in origins:
+            self._logger.info(
+                "Copying media from '%s' to '%s'" % (origin, destination)
             )
-        try:
-            __, ws = self.rws
-            mod = dotted_import(mod, [d.location for d in ws])
-        except ImportError:
-            raise zc.buildout.UserError(
-                "Error in '%s': media_origin is '%s' "
-                "but we cannot find module '%s'" % (self.name, origin, mod)
+            try:
+                components = origin.split(':')
+                mod, directory = components[:2]
+            except ValueError:
+                raise zc.buildout.UserError(
+                    "Error in '%s': media_origin must be in the form "
+                    "'custom.module:directory'" % self.name
+                )
+            try:
+                __, ws = self.rws
+                mod = dotted_import(mod, [d.location for d in ws])
+            except ImportError:
+                raise zc.buildout.UserError(
+                    "Error in '%s': media_origin is '%s' "
+                    "but we cannot find module '%s'" % (self.name, origin, mod)
+                )
+            orig_directory = os.path.join(
+                os.path.dirname(mod.__file__),
+                directory
             )
-        orig_directory = os.path.join(
-            os.path.dirname(mod.__file__),
-            directory
-        )
-        if not os.path.isdir(orig_directory):
+            if not os.path.isdir(orig_directory):
+                raise zc.buildout.UserError(
+                    "Error in '%s': media_origin is '%s' "
+                    "but '%s' does not seem to be a directory" % (
+                        self.name, origin, directory
+                    )
+                )
+            if len(components) > 2:
+                target = os.path.join(destination, components[2])
+            else:
+                target = destination
+            copier.copy(orig_directory, target)
+        try:
+            copier.execute()
+        except OSError, e:
             raise zc.buildout.UserError(
-                "Error in '%s': media_origin is '%s' "
-                "but '%s' does not seem to be a directory" % (
-                    self.name, origin, directory
+                "Failed to copy %s into '%s': %s" % (
+                    ', '.join([ "'%s'" % o for o in origins ]),
+                    destination,
+                    e
                 )
             )
-        if len(components) > 2:
-            copytree(
-                orig_directory,
-                os.path.join(destination, components[2]),
-                self._logger,
-                link
-            )
-        else:
-            copytree(orig_directory, destination, self._logger, link)
 
     def create_static(self, prefix):
         media_directory = os.path.join(
@@ -672,8 +641,11 @@ class Recipe(object):
                 )
                 os.makedirs(media_directory)
             link = (self.options.get(link_option, 'false').lower() == 'true')
-            for origin in self.options[origin_option].split():
-                self.copy_origin(origin, media_directory, link)
+            self.copy_origin(
+                self.options[origin_option].split(),
+                media_directory,
+                link
+            )
         else:
             if not os.path.isdir(media_directory):
                 self._logger.info(
