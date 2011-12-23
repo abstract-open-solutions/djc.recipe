@@ -1,4 +1,4 @@
-0.9.2 (unreleased)
+0.9.2 (2011-12-23)
 ==================
 
 - Added proper "smart" symlinking of static and origin [Simone Deponti]
