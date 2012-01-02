@@ -1,7 +1,7 @@
 0.9.3 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Fixed bug with static directory copying [Simone Deponti]
 
 
 0.9.2 (2011-12-23)
