@@ -26,6 +26,11 @@ def setUp(test):
     create_file(test.globs['source'], ['two', 'a', 'b.txt'])
     create_file(test.globs['source'], ['three', 'a', 'a.txt'])
     create_file(test.globs['source'], ['three', 'a', 'd.txt'])
+    create_file(test.globs['source'], ['zza', 'zza.txt'])
+    create_file(test.globs['source'], ['zzb', 'zzb', 'zzb.txt'])
+    create_file(test.globs['source'], ['zzb', 'zzb', 'zzc', 'zzc.txt'])
+    create_file(test.globs['source'], ['zzb', 'zzb', 'zzd', 'zzd.txt'])
+    create_file(test.globs['source'], ['zzz', 'zzz', 'zzz.txt'])
 
 
 def tearDown(test):

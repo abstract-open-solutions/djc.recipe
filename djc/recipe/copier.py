@@ -168,6 +168,16 @@ class Copier(object):
             a
               a.txt
               d.txt
+          zza
+            zza.txt
+          zzb
+            zzb.txt
+            zzc
+              zzc.txt
+            zzd
+              zzd.txt
+          zzz
+            zzz.txt
 
     And will be configured to copy things to a target directory that will,
     after the copy, look like this::
@@ -184,6 +194,15 @@ class Copier(object):
             a
               c.txt
               d.txt
+          zza.txt
+          zzb
+            zzb.txt
+            zzc
+              zzc.txt
+            zzd
+              zzd.txt
+          zzz
+            zzz.txt
 
     In order to do this, we instantiate our copier (``link`` is false else the
     tests will break under windows)::
@@ -201,6 +220,10 @@ class Copier(object):
         ...     os.path.join(source, 'three'),
         ...     os.path.join(target, 'three')
         ... )
+        >>> copier.copy(os.path.join(source, 'zza'), target)
+        >>> copier.copy(os.path.join(source, 'zzb'), target)
+        >>> copier.copy(os.path.join(source, 'zzz'), target)
+
 
     .. note::
        The following is totally not necessary in normal usage. We do it here
@@ -213,13 +236,29 @@ class Copier(object):
     the files inside subtrees that remain the same, but copy those subtrees
     over in a single operation::
 
+        >>> copier.operations #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+        [('single', '.../one/b.txt', '.../b.txt'),
+         ('single', '.../one/a/c.txt', '.../a/c.txt'),
+         ('single', '.../one/c/e.txt', '.../c/e.txt'),
+         ('single', '.../one/c/d.txt', '.../c/d.txt'),
+         ('single', '.../two/a/b.txt', '.../a/b.txt'),
+         ('single', '.../three/a/a.txt', '.../three/a/a.txt'),
+         ('single', '.../three/a/d.txt', '.../three/a/d.txt'),
+         ('single', '.../zza/zza.txt', '.../zza.txt'),
+         ('single', '.../zzb/zzb.txt', '.../zzb/zzb.txt'),
+         ('single', '.../zzb/zzc/zzc.txt', '.../zzb/zzc/zzc.txt'),
+         ('single', '.../zzb/zzd/zzd.txt', '.../zzb/zzd/zzd.txt'),
+         ('single', '.../zzz/zzz/zzz.txt', '.../zzz/zzz.txt')]
         >>> copier._merge()
         >>> copier.operations #doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
         [('tree', '.../one/c', '.../c'),
          ('tree', '.../three/a', '.../three/a'),
+         ('tree', '.../zzb', '.../zzb'),
+         ('tree', '.../zzz', '.../zzz'),
          ('single', '.../one/a/c.txt', '.../a/c.txt'),
          ('single', '.../one/b.txt', '.../b.txt'),
-         ('single', '.../two/a/b.txt', '.../a/b.txt')]
+         ('single', '.../two/a/b.txt', '.../a/b.txt'),
+         ('single', '.../zza/zza.txt', '.../zza.txt')]
 
     If we then call ``execute`` to actually perform the copy, we see that the
     target respect the tree model that we gave above::
@@ -230,6 +269,9 @@ class Copier(object):
         -  b.txt
         d  c
         d  three
+        -  zza.txt
+        d  zzb
+        d  zzz
         >>> ls(target, 'a')
         -  b.txt
         -  c.txt
@@ -241,6 +283,16 @@ class Copier(object):
         >>> ls(target, 'three', 'a')
         -  a.txt
         -  d.txt
+        >>> ls(target, 'zzb')
+        -  zzb.txt
+        d  zzc
+        d  zzd
+        >>> ls(target, 'zzb', 'zzc')
+        -  zzc.txt
+        >>> ls(target, 'zzb', 'zzd')
+        -  zzd.txt
+        >>> ls(target, 'zzz')
+        -  zzz.txt
 
     Had we passed ``link`` as true, it would have linked entire subdirectories
     where possible.
