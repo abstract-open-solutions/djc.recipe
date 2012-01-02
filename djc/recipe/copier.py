@@ -333,7 +333,7 @@ class Copier(object):
                 return False
         return True
 
-    def _merge(self):
+    def _merge(self): # pylint: disable=R0912
         """Merges the operations that can be done "in bulk", because the
         subtrees are invariant.
         """
@@ -347,10 +347,15 @@ class Copier(object):
                 tree_operations.append(('tree', path, target_trees[hash_]))
         if len(tree_operations) > 0:
             tree_operations.sort(key=lambda x: x[1])
-            for i, operation in enumerate([ o for o in tree_operations[1:] ]):
-                previous_operation = tree_operations[i]
-                if operation[1].startswith(previous_operation[1]):
-                    tree_operations.remove(operation)
+            reduced_tree_operations = []
+            for operation in tree_operations:
+                if len(reduced_tree_operations) > 0:
+                    base_operation = reduced_tree_operations[-1]
+                    if not operation[1].startswith(base_operation[1]):
+                        reduced_tree_operations.append(operation)
+                else:
+                    reduced_tree_operations.append(operation)
+            tree_operations = reduced_tree_operations
             self.operations.sort(key=lambda x: x[1])
             new_operations = [ o for o in tree_operations ]
             operation_match = False
