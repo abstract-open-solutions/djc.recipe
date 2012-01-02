@@ -1,4 +1,4 @@
-0.9.3 (unreleased)
+0.9.3 (2012-01-02)
 ==================
 
 - Fixed bug with static directory copying [Simone Deponti]
