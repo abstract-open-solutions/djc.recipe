@@ -1,4 +1,4 @@
-0.9.4 (unreleased)
+0.9.4 (2012-01-03)
 ==================
 
 - Fixed another bug with the copier when removing linked trees [Simone Deponti]
