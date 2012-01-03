@@ -389,7 +389,7 @@ class Copier(object):
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
             if os.path.exists(target):
-                if type_ == 'tree':
+                if type_ == 'tree' and not os.path.islink(target):
                     shutil.rmtree(target)
                 else:
                     os.remove(target)
