@@ -1,7 +1,7 @@
 0.9.5 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Fixed media directory deletion bug [Simone Deponti]
 
 
 0.9.4 (2012-01-03)

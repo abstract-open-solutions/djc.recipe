@@ -637,7 +637,7 @@ class Recipe(object):
         if origin_option in self.options:
             if not os.path.isdir(media_directory):
                 self._logger.info(
-                    "Making media directory '%s'" % media_directory
+                    "Making %s directory '%s'" % (prefix, media_directory)
                 )
                 os.makedirs(media_directory)
             link = (self.options.get(link_option, 'false').lower() == 'true')
@@ -649,7 +649,8 @@ class Recipe(object):
         else:
             if not os.path.isdir(media_directory):
                 self._logger.info(
-                    "Making empty media directory '%s'" % media_directory
+                    "Making empty %s directory '%s'" % (prefix,
+                                                        media_directory)
                 )
                 os.makedirs(media_directory)
         return [ media_directory ]
@@ -680,10 +681,12 @@ class Recipe(object):
         """
 
         self.install_project()
+        self.create_static('media') # we don't tell buildout we have created
+                                    # this directory so it's not deleted before
+                                    # update/reinstallation
         files = (
             self.create_project() +
             self.create_static('static') +
-            self.create_static('media') +
             self.create_manage_script()
         )
         if self.t_boolify(self.options.get('wsgi', 'false')):
