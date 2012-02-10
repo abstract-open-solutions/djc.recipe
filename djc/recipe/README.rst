@@ -204,6 +204,9 @@ timezone
 language-code
     The language code: defaults to ``en-us``
 
+use-l10n
+    Whether to use *l10n* or not: defaults to ``true``
+
 server-mail
     The email address from which site-generate mails come from. Defaults to
     ``root@localhost``
@@ -419,6 +422,8 @@ If we examine it::
     <BLANKLINE>
     LANGUAGE_CODE = 'en-us'
     <BLANKLINE>
+    USE_L10N = True
+    <BLANKLINE>
     STATIC_ROOT = '.../static'
     <BLANKLINE>
     STATIC_URL = '/static/'
@@ -518,6 +523,8 @@ And look at the generated settings::
     <BLANKLINE>
     LANGUAGE_CODE = 'en-us'
     <BLANKLINE>
+    USE_L10N = True
+    <BLANKLINE>
     STATIC_ROOT = '.../static'
     <BLANKLINE>
     STATIC_URL = '/static/'
@@ -607,6 +614,8 @@ file ::
     TIME_ZONE = 'America/Chicago'
     <BLANKLINE>
     LANGUAGE_CODE = 'en-us'
+    <BLANKLINE>
+    USE_L10N = True
     <BLANKLINE>
     STATIC_ROOT = '.../static'
     <BLANKLINE>

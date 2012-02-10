@@ -220,6 +220,8 @@ class Recipe(object):
         self.options.setdefault('timezone', 'America/Chicago')
         self.options.setdefault('language-code', 'en-us')
         self.options.setdefault('languages', '')
+        self.options.setdefault('use-l10n', 'true')
+
 
         self.options.setdefault('server-email', "root@localhost")
         self.options.setdefault('admins', "John Smith <root@localhost>")

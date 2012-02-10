@@ -35,6 +35,8 @@ TIME_ZONE = '{{timezone}}'
 
 LANGUAGE_CODE = '{{language_code}}'
 
+USE_L10N = {{boolify(use_l10n)}}
+
 STATIC_ROOT = '{{absolute_path(static_directory)}}'
 
 STATIC_URL = '/{{static_url}}/'
