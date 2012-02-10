@@ -1,4 +1,4 @@
-0.9.6 (unreleased)
+0.9.6 (2012-02-10)
 ==================
 
 - Added *use-l10n* option to default template [Simone Deponti]
