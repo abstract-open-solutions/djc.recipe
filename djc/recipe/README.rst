@@ -26,6 +26,16 @@ static-directory
     buildout directory. The directory will be created if not present, and
     nothing will be done if it already exists. If omitted, defaults to
     ``static``.
+    
+assets-directory
+    Identifies the folder which will contain static contents like external
+    templates that have to be downloaded (for example Bootstrap from Twitter).
+    Its goal is to offer a fast way to get external resources served from the
+    application without take into account any deployment problem.
+
+staticfiles-directory
+    This option enables the use of such option from Django, and indicates a 
+    directory that is server directly from the web server. [XXX check this]
 
 media-directory
     Identifies the folder into which uploaded files will go. If omitted,
@@ -44,6 +54,10 @@ static-origin
     If specified, defines directories from which to copy the static files that
     have to go in ``static-directory``: see `Static origin`_ for more details.
 
+assets-origin
+    If specified, defines directories from which to copy static files that have
+    to go in ``assets-directory``.
+    
 link-static-origin
     Boolean value, defaults to ``false``. If set, the files will be symlinked
     instead of copied. Does work only on unix.
@@ -352,16 +366,11 @@ And run it ::
 
     >>> print "start\n", system(buildout)
     start
-    ...
     Installing django.
     Getting distribution for 'dummydjangoprj'.
     ...
-    django: Generating settings in ...
-    django: Making empty static directory ...
-    django: Creating script at ...
-    Generated script ...
+    Got dummyproject ...
     ...
-    <BLANKLINE>
 
 This generated some files and directories for us:
 

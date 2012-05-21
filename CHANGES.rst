@@ -1,3 +1,10 @@
+0.9.9 (unreleased)
+==================
+
+- added *assets-origin* and *assets-directory* options to recipe [Bruno Ripa]
+- added *staticfiles-dirs* options to recipe [Bruno Ripa]
+- BEWARE that tests are actually broken !
+
 0.9.7 (unreleased)
 ==================
 

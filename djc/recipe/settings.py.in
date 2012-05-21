@@ -139,3 +139,23 @@ FIXTURE_DIRS = (
 {{endfor}}
 )
 {{endif}}
+
+
+{{if assets_origin}}
+ASSETS_ORIGIN = (
+    {{join(listify(assets_origin),"',\n    '","'","',")}}
+)
+{{endif}}
+
+
+STATICFILES_DIRS = (
+
+ {{if assets_origin}}
+     {{ join(listify(assets_origin),"',\n    '","'","',") }}
+ {{endif}}
+
+ {{if staticfiles_dirs}}
+    {{join(listify(join(staticfiles_dirs.split(' '),"','")),"',\n    '","('","'),")}}
+ {{endif}}
+ 
+)

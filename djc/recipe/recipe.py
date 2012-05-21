@@ -180,6 +180,11 @@ class Recipe(object):
 
         self.options.setdefault('static-directory', 'static')
         self.options.setdefault('static-url', 'static')
+        
+        # Bruno
+        self.options.setdefault('assets-directory', 'assets')
+        self.options.setdefault('assets-origin', '')        
+        
         self.options.setdefault('media-directory', 'media')
         self.options.setdefault('media-url', 'media')
         self.options.setdefault('admin-media', 'admin_media')
@@ -689,6 +694,7 @@ class Recipe(object):
         files = (
             self.create_project() +
             self.create_static('static') +
+            self.create_static('assets') +
             self.create_manage_script()
         )
         if self.t_boolify(self.options.get('wsgi', 'false')):
