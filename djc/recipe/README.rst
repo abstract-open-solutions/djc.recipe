@@ -368,9 +368,18 @@ And run it ::
     start
     Installing django.
     Getting distribution for 'dummydjangoprj'.
-    ...
-    Got dummyproject ...
-    ...
+    install_dir ...
+    Got dummydjangoprj ...
+    django: Making empty media directory '...'
+    django: Making ... a module
+    django: Generating settings in ...
+    django: Making empty static directory '...'
+    django: Making assets directory '...'
+    django: Creating script at ...
+    Generated script '...'.
+    zip_safe flag not set; analyzing archive contents...
+    <BLANKLINE>
+
 
 This generated some files and directories for us:
 
@@ -386,6 +395,7 @@ script and a ``parts/django`` part ::
     >>> ls(sample_buildout)
     -  .installed.cfg
     -  .secret.cfg
+    d  assets
     d  bin
     -  buildout.cfg
     d  develop-eggs
@@ -461,6 +471,14 @@ If we examine it::
     <BLANKLINE>
     DEBUG = False
     TEMPLATE_DEBUG = DEBUG
+    <BLANKLINE>
+    <BLANKLINE>
+    STATICFILES_DIRS = (
+    <BLANKLINE>
+        ('assets'),
+    <BLANKLINE>
+    )
+    
 
 As you can see, this is pretty much the standard Django ``settings.py`` as
 created by Django's ``django-admin``. It has the peculiarity of not residing in
@@ -566,7 +584,14 @@ And look at the generated settings::
     INTERNAL_IPS = (
         '127.0.0.1',
     )
-
+    <BLANKLINE>
+    <BLANKLINE>
+    STATICFILES_DIRS = (
+    <BLANKLINE>
+        ('assets'),
+    <BLANKLINE>
+    )
+    
 
 Template overriding
 -------------------
@@ -656,6 +681,13 @@ file ::
     TEMPLATE_DEBUG = DEBUG
     <BLANKLINE>
     <BLANKLINE>
+    STATICFILES_DIRS = (
+    <BLANKLINE>
+        ('assets'),
+    <BLANKLINE>
+    )
+    <BLANKLINE>
+    <BLANKLINE>    
     # Extension template template-extension.py.in
     <BLANKLINE>
     <BLANKLINE>
@@ -781,14 +813,19 @@ Let's create a buildout config and run it ::
     ... """ % cache_dir)
     >>> rmdir('static')
     >>> print system(buildout)
-    Develop: '.../dummydjangoapp1'
+    Develop: '...'
+    install_dir ...
     Uninstalling django.
     Installing django.
-    ...
-    django: Making static directory '.../static'
-    ...
-    Generated script ...
+    django: Making ... a module
+    django: Generating settings in ...
+    django: Making static directory '...'
+    django: Copying media from 'dummydjangoapp1:static' to '/sample-buildout/static'
+    django: Making assets directory '/sample-buildout/assets'
+    django: Creating script at /sample-buildout/bin/django
+    Generated script '/sample-buildout/bin/django'.
     <BLANKLINE>
+
 
 And now let's see what's in ``static`` ::
 
@@ -851,15 +888,22 @@ A quick run and inspect confirms this: ::
 
     >>> rmdir('static')
     >>> print system(buildout)
-    Develop: '.../dummydjangoapp1'
-    Develop: '.../dummydjangoapp2'
+    Develop: '/sample-buildout/src/dummydjangoapp1'
+    install_dir ...
+    Develop: '/sample-buildout/src/dummydjangoapp2'
+    install_dir ...
     Uninstalling django.
     Installing django.
-    ...
-    django: Making static directory '.../static'
-    ...
-    Generated script ...
+    django: Making ... a module
+    django: Generating settings in /sample-buildout/parts/django/djc_recipe_django
+    django: Making static directory '/sample-buildout/static'
+    django: Copying media from 'dummydjangoapp1:static' to '/sample-buildout/static'
+    django: Copying media from 'dummydjangoapp2:static' to '/sample-buildout/static'
+    django: Making assets directory '/sample-buildout/assets'
+    django: Creating script at /sample-buildout/bin/django
+    Generated script '/sample-buildout/bin/django'.
     <BLANKLINE>
+
     >>> ls('static')
     -  lib1.js
     -  lib2.js
@@ -903,15 +947,22 @@ happens ::
 
     >>> rmdir('static')
     >>> print system(buildout)
-    Develop: '.../dummydjangoapp1'
-    Develop: '.../dummydjangoapp2'
+    Develop: '/sample-buildout/src/dummydjangoapp1'
+    install_dir ...
+    Develop: '/sample-buildout/src/dummydjangoapp2'
+    install_dir ...
     Uninstalling django.
     Installing django.
-    ...
-    django: Making static directory '.../static'
-    ...
-    Generated script ...
+    django: Making /sample-buildout/parts/django/djc_recipe_django a module
+    django: Generating settings in /sample-buildout/parts/django/djc_recipe_django
+    django: Making static directory '/sample-buildout/static'
+    django: Copying media from 'dummydjangoapp1:static:app1' to '/sample-buildout/static'
+    django: Copying media from 'dummydjangoapp2:static:app2' to '/sample-buildout/static'
+    django: Making assets directory '/sample-buildout/assets'
+    django: Creating script at /sample-buildout/bin/django
+    Generated script '/sample-buildout/bin/django'.
     <BLANKLINE>
+    
     >>> ls('static')
     d  app1
     d  app2

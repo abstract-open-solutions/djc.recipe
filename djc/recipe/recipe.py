@@ -183,7 +183,8 @@ class Recipe(object):
         
         # Bruno
         self.options.setdefault('assets-directory', 'assets')
-        self.options.setdefault('assets-origin', '')        
+        self.options.setdefault('assets-origin', '')     
+        self.options.setdefault('staticfiles-dirs', 'assets')     
         
         self.options.setdefault('media-directory', 'media')
         self.options.setdefault('media-url', 'media')
