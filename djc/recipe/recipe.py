@@ -241,6 +241,7 @@ class Recipe(object):
         self.options.setdefault('fixture-dirs', '')
 
         self.options.setdefault('environment-vars', '')
+        self.options.setdefault('settings-name', SETTINGS_NAME)
 
         self.eggs = [ EGG_NAME ]
         if 'eggs' in self.buildout['buildout']:
@@ -521,7 +522,9 @@ class Recipe(object):
             arguments = "'%s'%s" % (
                 "%s.%s" % (
                     os.path.basename(self.module_path.rstrip(os.sep)),
-                    os.path.splitext(SETTINGS_NAME)[0].split('$py')[0]
+                    os.path.splitext(
+                        self.options['settings-name']
+                    )[0].split('$py')[0]
                 ),
                 extras
             )
