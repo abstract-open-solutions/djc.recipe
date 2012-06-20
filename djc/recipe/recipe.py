@@ -16,9 +16,9 @@ from tempita import Template, bunch
 from copier import Copier
 
 
-_egg_name = 'djc.recipe'
-_settings_name = 'settings.py'
-_wsgi_script_template = '''
+EGG_NAME = 'djc.recipe'
+SETTINGS_NAME = 'settings.py'
+WSGI_SCRIPT_TEMPLATE = '''
 
 %(relative_paths_setup)s
 import sys
@@ -242,7 +242,7 @@ class Recipe(object):
 
         self.options.setdefault('environment-vars', '')
 
-        self.eggs = [ _egg_name ]
+        self.eggs = [ EGG_NAME ]
         if 'eggs' in self.buildout['buildout']:
             self.eggs.extend(self.buildout['buildout']['eggs'].split())
         if 'eggs' in self.options:
@@ -521,7 +521,7 @@ class Recipe(object):
             arguments = "'%s'%s" % (
                 "%s.%s" % (
                     os.path.basename(self.module_path.rstrip(os.sep)),
-                    os.path.splitext(_settings_name)[0].split('$py')[0]
+                    os.path.splitext(SETTINGS_NAME)[0].split('$py')[0]
                 ),
                 extras
             )
@@ -541,7 +541,7 @@ class Recipe(object):
         _script_template = zc.buildout.easy_install.script_template
         zc.buildout.easy_install.script_template = \
                 zc.buildout.easy_install.script_header + \
-                    _wsgi_script_template
+                    WSGI_SCRIPT_TEMPLATE
         extras = []
         if 'wsgi-logfile' in self.options:
             extras.append(
@@ -671,7 +671,7 @@ class Recipe(object):
         self._logger.info("Making %s a module" % self.module_path)
         touch(os.path.join(self.module_path, '__init__.py'), content = '#')
         self._logger.info("Generating settings in %s" % project_dir)
-        fullpath = os.path.join(project_dir, _settings_name)
+        fullpath = os.path.join(project_dir, SETTINGS_NAME)
         self._logger.debug("(Over)writing %s" % fullpath)
         st = open(fullpath, 'wb')
         st.write(self.settings_py.encode('utf-8'))
