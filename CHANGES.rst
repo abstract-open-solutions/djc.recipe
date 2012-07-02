@@ -1,7 +1,9 @@
 0.9.7 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Made SETTINGS_NAME configurable [Simone Deponti]
+- Made several things more pythonic [Simone Deponti]
+- Deprecated the version [Simone Deponti]
 
 
 0.9.6 (2012-02-10)

@@ -1,5 +1,13 @@
 .. contents::
 
+.. warning::
+   This recipe has been deprecated in favor of `djc.recipe2`_.
+   If you are starting a new project,
+   **don't use this package**,
+   use `djc.recipe2`_.
+   This package might see minor bug fixes to keep existing buildouts running,
+   but it won't gain new features.
+
 This recipe allows you to setup a Django_ project through `zc.buildout`_.
 
 Usage
@@ -55,4 +63,4 @@ Links
 .. _Django: http://www.djangoproject.com/
 .. _`zc.buildout`: http://www.buildout.org/
 .. _Satchmo: http://www.satchmoproject.com
-
+.. _`djc.recipe2`: http://pypi.python.org/pypi/djc.recipe2
