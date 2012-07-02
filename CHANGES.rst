@@ -1,4 +1,4 @@
-0.9.7 (unreleased)
+0.9.7 (2012-07-02)
 ==================
 
 - Made SETTINGS_NAME configurable [Simone Deponti]
